@@ -898,4 +898,15 @@ async function init() {
   showScreen('garage');
 }
 
+// Unlock AudioContext on first user interaction (touch, click, or key)
+const unlockAudio = () => {
+  audio.start({ music: saved.music, sound: saved.sound });
+  window.removeEventListener('pointerdown', unlockAudio);
+  window.removeEventListener('keydown', unlockAudio);
+  window.removeEventListener('touchstart', unlockAudio);
+};
+window.addEventListener('pointerdown', unlockAudio, { once: true });
+window.addEventListener('keydown', unlockAudio, { once: true });
+window.addEventListener('touchstart', unlockAudio, { once: true });
+
 init();
