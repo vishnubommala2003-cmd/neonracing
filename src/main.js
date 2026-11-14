@@ -611,6 +611,53 @@ $('#btn-exit-race')?.addEventListener('click', (e) => {
   audio.setInRace(false);
   game.clearRaceVehicles();
   showScreen('garage');
+  updateTrackUi(audio.getCurrentTrack());
+});
+
+// Music Song Player Controls & UI Synchronization
+function updateTrackUi(track) {
+  if (!track) return;
+  const shortTitle = track.title.split('—')[0].trim();
+  const topName = $('#top-track-name');
+  if (topName) topName.textContent = shortTitle;
+  const hudName = $('#hud-track-name');
+  if (hudName) hudName.textContent = shortTitle;
+}
+
+audio.onTrackChange((track) => {
+  updateTrackUi(track);
+});
+
+$('#btn-next-track')?.addEventListener('click', (e) => {
+  e.preventDefault();
+  e.stopPropagation();
+  audio.start({ music: saved.music, sound: saved.sound });
+  const t = audio.nextTrack();
+  updateTrackUi(t);
+});
+
+$('#btn-prev-track')?.addEventListener('click', (e) => {
+  e.preventDefault();
+  e.stopPropagation();
+  audio.start({ music: saved.music, sound: saved.sound });
+  const t = audio.prevTrack();
+  updateTrackUi(t);
+});
+
+$('#btn-hud-next-track')?.addEventListener('click', (e) => {
+  e.preventDefault();
+  e.stopPropagation();
+  audio.start({ music: saved.music, sound: saved.sound });
+  const t = audio.nextTrack();
+  updateTrackUi(t);
+});
+
+$('#music-pill')?.addEventListener('click', (e) => {
+  if (e.target && e.target.closest('button')) return;
+  e.preventDefault();
+  audio.start({ music: saved.music, sound: saved.sound });
+  const t = audio.nextTrack();
+  updateTrackUi(t);
 });
 
 ['fullscreenchange', 'webkitfullscreenchange', 'orientationchange', 'resize'].forEach((ev) => {
@@ -896,6 +943,7 @@ async function init() {
   }
 
   showScreen('garage');
+  updateTrackUi(audio.getCurrentTrack());
 }
 
 // Unlock AudioContext on first user interaction (touch, click, or key)

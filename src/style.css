@@ -151,6 +151,70 @@ body.in-race {
   flex-shrink: 0;
 }
 
+/* MUSIC SONG PLAYER WIDGET IN TOPBAR */
+.music-pill {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(8, 38, 70, 0.75);
+  border: 1px solid #1fa4dd;
+  padding: 3px 8px;
+  border-radius: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.music-pill:hover {
+  border-color: var(--cyan);
+  background: rgba(19, 191, 255, 0.2);
+  box-shadow: 0 0 10px rgba(19, 191, 255, 0.35);
+}
+
+.music-icon {
+  font-size: 13px;
+  animation: pulseBeat 1.8s ease-in-out infinite alternate;
+}
+
+@keyframes pulseBeat {
+  0% { transform: scale(0.9); opacity: 0.8; }
+  100% { transform: scale(1.15); opacity: 1; }
+}
+
+.music-track-name {
+  font: 700 12px 'Barlow Condensed';
+  letter-spacing: 1px;
+  color: #7ce8ff;
+  max-width: 95px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.music-btn {
+  background: transparent;
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  padding: 0 3px;
+  font-size: 11px;
+  line-height: 1;
+  transition: transform 0.15s ease, color 0.15s ease;
+}
+
+.music-btn:hover {
+  color: var(--cyan);
+  transform: scale(1.2);
+}
+
+.hud-action-btn.music {
+  border-color: #1fa4dd;
+  color: #7ce8ff;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
 .wallet span {
   white-space: nowrap;
   display: flex;

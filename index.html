@@ -28,6 +28,12 @@
         <button data-screen="leaderboard">Leaderboard</button>
       </nav>
       <div class="wallet">
+        <div class="music-pill" id="music-pill" title="Click to Change Music Song">
+          <button class="music-btn" id="btn-prev-track" aria-label="Previous Track" title="Previous Song">⏮</button>
+          <span class="music-icon">🎵</span>
+          <span class="music-track-name" id="top-track-name">Syntheticity</span>
+          <button class="music-btn" id="btn-next-track" aria-label="Next Track" title="Next Song">⏭</button>
+        </div>
         <span title="Race Coins">🪙 <b id="coins">542</b></span>
         <span title="Gems">💎 <b id="gems">0</b></span>
         <span title="Championship Stars">⭐ <b id="stars">3</b></span>
@@ -214,6 +220,7 @@
           <span>SPEED <b id="speed">0</b> km/h</span>
           <span>DRIFT <b id="drift-dist">0 m</b></span>
           <div class="hud-actions">
+            <button class="hud-action-btn music" id="btn-hud-next-track" title="Next Music Song">🎵 <span id="hud-track-name">Syntheticity</span> ⏭</button>
             <button class="hud-action-btn" id="btn-fullscreen-hud" aria-label="Toggle Fullscreen" title="Toggle Fullscreen">⛶</button>
             <button class="hud-action-btn exit" id="btn-exit-race" title="Exit to Garage">✕ EXIT</button>
           </div>

@@ -1,374 +1,277 @@
+// Neon GT Racing — Audio Engine & Music System
+// Real Studio Songs Playlist + Smooth, Non-Irritating Warm Sports Car Sound
+
+export const PLAYLIST = [
+  { id: 'syntheticity', title: 'Syntheticity — Cyber Arcade', artist: 'Tanner Helland', src: '/audio/syntheticity.mp3' },
+  { id: 'defiance',     title: 'Defiance — Epic Speed',       artist: 'Tanner Helland', src: '/audio/defiance.mp3' },
+  { id: 'dark_knight',  title: 'Dark Knight — Night Cruise',  artist: 'Tanner Helland', src: '/audio/dark_knight.mp3' }
+];
+
 export class RaceAudio {
   constructor() {
     this.context = null;
     this.masterGain = null;
     this.compressor = null;
 
-    // Multi-layer Sports Car Engine Synthesizer
-    this.engineOsc1 = null; // Fundamental crankshaft
-    this.engineOsc2 = null; // 2x cylinder firing harmonic
-    this.engineOsc3 = null; // Sub-bass rumble
-    this.engineOsc4 = null; // High-RPM acoustic intake wail
-    this.turboOsc = null;   // Turbocharger spool whine
-    this.turboGain = null;
+    // Smooth, warm engine synthesizer (pleasant tones, zero harsh buzz)
+    this.engineLowOsc = null;  // Sub rumble (warm sine)
+    this.engineMidOsc = null;  // Cylinder purr (warm triangle)
+    this.engineSubOsc = null;  // Deep exhaust resonance (sine)
     this.engineFilter = null;
-    this.enginePeak = null;
-    this.engineShaper = null;
     this.engineGain = null;
 
-    // Tire Screech & Nitro Chains
-    this.screechGain = null;
-    this.screechFilter = null;
-    this.nitroNoiseGain = null;
-    this.nitroSubOsc = null;
-    this.nitroSubGain = null;
+    // Tire drift & nitro thrust
+    this.driftGain = null;
+    this.driftFilter = null;
+    this.nitroGain = null;
+    this.nitroFilter = null;
 
-    // Music Synthesizer & Sequencer
+    // Real Songs Player
+    this.currentTrackIndex = 0;
+    this.audioEl = null;
+    this.mediaSource = null;
     this.musicGain = null;
-    this.musicTimer = null;
-    this.musicStep = 0;
+    this.onTrackChangeCallback = null;
+
+    // Gear shift tracking
     this.currentGear = 1;
     this.prevSpeed = 0;
-    this.lastShiftTime = 0;
 
     this.settings = { music: true, sound: true };
     this.inRace = false;
+    this.isInitialized = false;
+  }
+
+  // Set callback for UI track title updates
+  onTrackChange(cb) {
+    this.onTrackChangeCallback = cb;
+  }
+
+  getCurrentTrack() {
+    return PLAYLIST[this.currentTrackIndex];
   }
 
   start(settings) {
     if (settings) this.settings = { ...settings };
-    if (!this.context) {
-      const AudioContext = window.AudioContext || window.webkitAudioContext;
-      if (!AudioContext) return;
-      this.context = new AudioContext();
 
-      // Master Compressor / Limiter (Arcade loudness & punch without digital clipping)
-      this.compressor = this.context.createDynamicsCompressor();
-      this.compressor.threshold.value = -10;
-      this.compressor.knee.value = 18;
-      this.compressor.ratio.value = 8;
-      this.compressor.attack.value = 0.003;
-      this.compressor.release.value = 0.15;
-      this.compressor.connect(this.context.destination);
-
-      this.masterGain = this.context.createGain();
-      this.masterGain.gain.value = 1.0;
-      this.masterGain.connect(this.compressor);
-
-      // 1. ENGINE ROAR SYNTHESIZER
-      this._initEngineSynth();
-
-      // 2. NOISE CHAINS (Tire Screech & Nitro Rocket)
-      this._initNoiseChains();
-
-      // 3. BACKGROUND MUSIC SYNTHESIZER BUS
-      this.musicGain = this.context.createGain();
-      this.musicGain.gain.value = 0.72;
-      this.musicGain.connect(this.masterGain);
-
-      this._startMusicSequencer();
+    // 1. Initialize HTML5 Music Player for real songs
+    if (!this.audioEl) {
+      this._initMusicPlayer();
     }
 
-    if (this.context.state === 'suspended') {
+    // 2. Initialize Web Audio API for smooth SFX & engine
+    if (!this.context) {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (AudioCtx) {
+        this.context = new AudioCtx();
+
+        // Master Limiter / Compressor for clean, pleasant mixing
+        this.compressor = this.context.createDynamicsCompressor();
+        this.compressor.threshold.value = -12;
+        this.compressor.knee.value = 24;
+        this.compressor.ratio.value = 6;
+        this.compressor.attack.value = 0.005;
+        this.compressor.release.value = 0.2;
+        this.compressor.connect(this.context.destination);
+
+        this.masterGain = this.context.createGain();
+        this.masterGain.gain.value = 0.9;
+        this.masterGain.connect(this.compressor);
+
+        // Music bus
+        this.musicGain = this.context.createGain();
+        this.musicGain.gain.value = this.settings.music ? 0.75 : 0;
+        this.musicGain.connect(this.masterGain);
+
+        // Connect HTML5 audio element to Web Audio bus if possible
+        try {
+          if (!this.mediaSource && this.audioEl) {
+            this.mediaSource = this.context.createMediaElementSource(this.audioEl);
+            this.mediaSource.connect(this.musicGain);
+          }
+        } catch (e) {
+          // Fallback: audioEl volume controlled directly
+        }
+
+        // Initialize smooth engine & noise chains
+        this._initSmoothEngine();
+        this._initGentleSfxChains();
+      }
+    }
+
+    if (this.context && this.context.state === 'suspended') {
       this.context.resume().catch(() => {});
     }
-    this.setSettings(this.settings);
-  }
 
-  _makeDistortionCurve(amount = 25) {
-    const n_samples = 44100;
-    const curve = new Float32Array(n_samples);
-    const deg = Math.PI / 180;
-    for (let i = 0; i < n_samples; ++i) {
-      const x = (i * 2) / n_samples - 1;
-      curve[i] = ((3 + amount) * x * 20 * deg) / (Math.PI + amount * Math.abs(x));
+    // Start playing background music if enabled
+    if (this.settings.music && this.audioEl && this.audioEl.paused) {
+      this._playCurrentSong();
     }
-    return curve;
+
+    this.setSettings(this.settings);
+    this.isInitialized = true;
   }
 
-  _initEngineSynth() {
+  _initMusicPlayer() {
+    this.audioEl = new Audio();
+    this.audioEl.preload = 'auto';
+    this.audioEl.volume = 0.7;
+
+    // Load initial track
+    this.audioEl.src = PLAYLIST[this.currentTrackIndex].src;
+
+    // When song ends, seamlessly play next song
+    this.audioEl.addEventListener('ended', () => {
+      this.nextTrack();
+    });
+
+    // Notify listeners
+    if (this.onTrackChangeCallback) {
+      this.onTrackChangeCallback(PLAYLIST[this.currentTrackIndex]);
+    }
+  }
+
+  _playCurrentSong() {
+    if (!this.audioEl) return;
+    const track = PLAYLIST[this.currentTrackIndex];
+    if (!this.audioEl.src.endsWith(track.src)) {
+      this.audioEl.src = track.src;
+    }
+    this.audioEl.currentTime = 0;
+    const playPromise = this.audioEl.play();
+    if (playPromise !== undefined) {
+      playPromise.catch((err) => {
+        // Autoplay may need user gesture; will start on next tap
+      });
+    }
+
+    if (this.onTrackChangeCallback) {
+      this.onTrackChangeCallback(track);
+    }
+  }
+
+  nextTrack() {
+    this.currentTrackIndex = (this.currentTrackIndex + 1) % PLAYLIST.length;
+    this._playCurrentSong();
+    return PLAYLIST[this.currentTrackIndex];
+  }
+
+  prevTrack() {
+    this.currentTrackIndex = (this.currentTrackIndex - 1 + PLAYLIST.length) % PLAYLIST.length;
+    this._playCurrentSong();
+    return PLAYLIST[this.currentTrackIndex];
+  }
+
+  setTrack(index) {
+    if (index >= 0 && index < PLAYLIST.length) {
+      this.currentTrackIndex = index;
+      this._playCurrentSong();
+    }
+    return PLAYLIST[this.currentTrackIndex];
+  }
+
+  // WARM, SMOOTH, NON-IRRITATING SPORTS CAR ENGINE SYNTHESIZER
+  // Uses gentle low-passed sine and triangle waves (no harsh clipping, no screaming buzz)
+  _initSmoothEngine() {
     const now = this.context.currentTime;
 
-    // Throaty Waveshaper Overdrive (gives aggressive exhaust growl)
-    this.engineShaper = this.context.createWaveShaper();
-    this.engineShaper.curve = this._makeDistortionCurve(18);
-    this.engineShaper.oversample = '2x';
-
-    // Lowpass filter tracking engine revs
+    // Gentle lowpass filter to remove any harshness (warm sports coupe exhaust)
     this.engineFilter = this.context.createBiquadFilter();
     this.engineFilter.type = 'lowpass';
-    this.engineFilter.frequency.value = 350;
-    this.engineFilter.Q.value = 2.8;
-
-    // Peaking filter for the characteristic sports exhaust resonance
-    this.enginePeak = this.context.createBiquadFilter();
-    this.enginePeak.type = 'peaking';
-    this.enginePeak.frequency.value = 1100;
-    this.enginePeak.Q.value = 3.2;
-    this.enginePeak.gain.value = 6.0;
+    this.engineFilter.frequency.value = 340;
+    this.engineFilter.Q.value = 1.0;
 
     this.engineGain = this.context.createGain();
     this.engineGain.gain.value = 0;
 
-    // Osc 1: Crankshaft fundamental (Sawtooth)
-    this.engineOsc1 = this.context.createOscillator();
-    this.engineOsc1.type = 'sawtooth';
-    this.engineOsc1.frequency.value = 54;
+    // 1. Warm low rumble (deep fundamental exhaust note)
+    this.engineLowOsc = this.context.createOscillator();
+    this.engineLowOsc.type = 'triangle';
+    this.engineLowOsc.frequency.value = 46;
 
-    // Osc 2: Cylinder firing harmonic (Sawtooth, detuned for raw boxer chorus)
-    this.engineOsc2 = this.context.createOscillator();
-    this.engineOsc2.type = 'sawtooth';
-    this.engineOsc2.frequency.value = 108;
-    this.engineOsc2.detune.value = 7;
+    // 2. Smooth cylinder purr (sine wave harmonic)
+    this.engineMidOsc = this.context.createOscillator();
+    this.engineMidOsc.type = 'sine';
+    this.engineMidOsc.frequency.value = 92;
 
-    // Osc 3: Sub-bass chest rumble (Triangle)
-    this.engineOsc3 = this.context.createOscillator();
-    this.engineOsc3.type = 'triangle';
-    this.engineOsc3.frequency.value = 27;
+    // 3. Deep sub-bass chest rumble
+    this.engineSubOsc = this.context.createOscillator();
+    this.engineSubOsc.type = 'sine';
+    this.engineSubOsc.frequency.value = 32;
 
-    // Osc 4: High RPM screaming intake wail
-    this.engineOsc4 = this.context.createOscillator();
-    this.engineOsc4.type = 'sawtooth';
-    this.engineOsc4.frequency.value = 216;
+    // Route gentle oscillators into filter and gain
+    this.engineLowOsc.connect(this.engineFilter);
+    this.engineMidOsc.connect(this.engineFilter);
+    this.engineSubOsc.connect(this.engineFilter);
 
-    // Turbocharger spool whine (high-pitch turbine whistle)
-    this.turboOsc = this.context.createOscillator();
-    this.turboOsc.type = 'sine';
-    this.turboOsc.frequency.value = 1500;
-    this.turboGain = this.context.createGain();
-    this.turboGain.gain.value = 0;
-    this.turboOsc.connect(this.turboGain).connect(this.masterGain);
+    this.engineFilter.connect(this.engineGain).connect(this.masterGain);
 
-    // Route engine oscillators through shaper, filters and gain
-    this.engineOsc1.connect(this.engineShaper);
-    this.engineOsc2.connect(this.engineShaper);
-    this.engineOsc3.connect(this.engineFilter);
-    this.engineOsc4.connect(this.engineShaper);
-
-    this.engineShaper.connect(this.engineFilter);
-    this.engineFilter.connect(this.enginePeak);
-    this.enginePeak.connect(this.engineGain).connect(this.masterGain);
-
-    this.engineOsc1.start(now);
-    this.engineOsc2.start(now);
-    this.engineOsc3.start(now);
-    this.engineOsc4.start(now);
-    this.turboOsc.start(now);
+    this.engineLowOsc.start(now);
+    this.engineMidOsc.start(now);
+    this.engineSubOsc.start(now);
   }
 
-  _initNoiseChains() {
+  // GENTLE SFX CHAINS (Soft drift slip and warm nitro thrust)
+  _initGentleSfxChains() {
     const now = this.context.currentTime;
     const bufferSize = this.context.sampleRate * 2.0;
     const noiseBuffer = this.context.createBuffer(1, bufferSize, this.context.sampleRate);
     const output = noiseBuffer.getChannelData(0);
     for (let i = 0; i < bufferSize; i++) output[i] = Math.random() * 2 - 1;
 
-    // Tire Screech Chain (Loud, gritty smoking friction)
-    const screechSrc = this.context.createBufferSource();
-    screechSrc.buffer = noiseBuffer;
-    screechSrc.loop = true;
-    this.screechFilter = this.context.createBiquadFilter();
-    this.screechFilter.type = 'bandpass';
-    this.screechFilter.frequency.value = 1450;
-    this.screechFilter.Q.value = 5.5;
-    this.screechGain = this.context.createGain();
-    this.screechGain.gain.value = 0;
-    screechSrc.connect(this.screechFilter).connect(this.screechGain).connect(this.masterGain);
-    screechSrc.start(now);
+    // Soft pavement drift sound (gentle bandpass, no screech)
+    const driftSrc = this.context.createBufferSource();
+    driftSrc.buffer = noiseBuffer;
+    driftSrc.loop = true;
+    this.driftFilter = this.context.createBiquadFilter();
+    this.driftFilter.type = 'bandpass';
+    this.driftFilter.frequency.value = 850;
+    this.driftFilter.Q.value = 2.0;
 
-    // Nitro Rocket Thrust Chain (Roaring jet burn + sub-bass rumble)
+    this.driftGain = this.context.createGain();
+    this.driftGain.gain.value = 0;
+    driftSrc.connect(this.driftFilter).connect(this.driftGain).connect(this.masterGain);
+    driftSrc.start(now);
+
+    // Warm Nitro rocket swoosh (gentle lowpass rumble)
     const nitroSrc = this.context.createBufferSource();
     nitroSrc.buffer = noiseBuffer;
     nitroSrc.loop = true;
-    const nitroFilter = this.context.createBiquadFilter();
-    nitroFilter.type = 'lowpass';
-    nitroFilter.frequency.value = 850;
-    nitroFilter.Q.value = 2.0;
-    this.nitroNoiseGain = this.context.createGain();
-    this.nitroNoiseGain.gain.value = 0;
-    nitroSrc.connect(nitroFilter).connect(this.nitroNoiseGain).connect(this.masterGain);
+    this.nitroFilter = this.context.createBiquadFilter();
+    this.nitroFilter.type = 'lowpass';
+    this.nitroFilter.frequency.value = 520;
+    this.nitroFilter.Q.value = 1.2;
+
+    this.nitroGain = this.context.createGain();
+    this.nitroGain.gain.value = 0;
+    nitroSrc.connect(this.nitroFilter).connect(this.nitroGain).connect(this.masterGain);
     nitroSrc.start(now);
-
-    // Nitro sub jet tone
-    this.nitroSubOsc = this.context.createOscillator();
-    this.nitroSubOsc.type = 'sawtooth';
-    this.nitroSubOsc.frequency.value = 65;
-    this.nitroSubGain = this.context.createGain();
-    this.nitroSubGain.gain.value = 0;
-    this.nitroSubOsc.connect(this.nitroSubGain).connect(this.masterGain);
-    this.nitroSubOsc.start(now);
-  }
-
-  // HIGH-ENERGY 138 BPM ARCADE STREET RACING SOUNDTRACK
-  _startMusicSequencer() {
-    if (this.musicTimer) return;
-
-    // 4-Bar High-Adrenaline Progression: F#m ➔ D ➔ A ➔ E
-    const chords = [
-      { root: 46.25, name: 'F#m', scale: [185.00, 220.00, 277.18, 370.00, 440.00, 554.37] },
-      { root: 36.71, name: 'D',   scale: [146.83, 185.00, 220.00, 293.66, 370.00, 440.00] },
-      { root: 55.00, name: 'A',   scale: [220.00, 277.18, 329.63, 440.00, 554.37, 659.25] },
-      { root: 41.20, name: 'E',   scale: [164.81, 207.65, 246.94, 329.63, 415.30, 493.88] },
-    ];
-
-    const stepDuration = 108; // ~138 BPM (16th note in milliseconds)
-
-    this.musicTimer = window.setInterval(() => {
-      if (!this.context || !this.settings.music || this.context.state !== 'running') return;
-      const now = this.context.currentTime;
-      const step = this.musicStep % 64;
-      const barIdx = Math.floor(step / 16);
-      const beatInBar = step % 16;
-      const chord = chords[barIdx % 4];
-      this.musicStep++;
-
-      // 1. PUNCHY 909 CYBER KICK DRUM (Every beat: 0, 4, 8, 12)
-      if (beatInBar % 4 === 0) {
-        const kick = this.context.createOscillator();
-        const kickEnv = this.context.createGain();
-        kick.type = 'sine';
-        kick.frequency.setValueAtTime(175, now);
-        kick.frequency.exponentialRampToValueAtTime(42, now + 0.08);
-
-        // Click transient
-        const click = this.context.createOscillator();
-        const clickEnv = this.context.createGain();
-        click.type = 'triangle';
-        click.frequency.setValueAtTime(650, now);
-        click.frequency.exponentialRampToValueAtTime(120, now + 0.02);
-        clickEnv.gain.setValueAtTime(0.25, now);
-        clickEnv.gain.exponentialRampToValueAtTime(0.001, now + 0.025);
-        click.connect(clickEnv).connect(this.musicGain);
-        click.start(now);
-        click.stop(now + 0.03);
-
-        const kickVol = this.inRace ? 0.35 : 0.18;
-        kickEnv.gain.setValueAtTime(kickVol, now);
-        kickEnv.gain.exponentialRampToValueAtTime(0.001, now + 0.095);
-        kick.connect(kickEnv).connect(this.musicGain);
-        kick.start(now);
-        kick.stop(now + 0.11);
-      }
-
-      // 2. CRISP CYBER SNARE & CLAP (Beats 2 and 4: steps 4 and 12)
-      if (beatInBar === 4 || beatInBar === 12) {
-        // Noise burst
-        const bufferSize = this.context.sampleRate * 0.12;
-        const noiseBuf = this.context.createBuffer(1, bufferSize, this.context.sampleRate);
-        const data = noiseBuf.getChannelData(0);
-        for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
-        const noise = this.context.createBufferSource();
-        noise.buffer = noiseBuf;
-
-        const snareFilter = this.context.createBiquadFilter();
-        snareFilter.type = 'bandpass';
-        snareFilter.frequency.value = 1800;
-        snareFilter.Q.value = 2.2;
-
-        const snareEnv = this.context.createGain();
-        const snareVol = this.inRace ? 0.26 : 0.12;
-        snareEnv.gain.setValueAtTime(snareVol, now);
-        snareEnv.gain.exponentialRampToValueAtTime(0.001, now + 0.11);
-
-        // Tonal body
-        const tone = this.context.createOscillator();
-        const toneEnv = this.context.createGain();
-        tone.type = 'triangle';
-        tone.frequency.setValueAtTime(240, now);
-        tone.frequency.exponentialRampToValueAtTime(110, now + 0.06);
-        toneEnv.gain.setValueAtTime(snareVol * 0.7, now);
-        toneEnv.gain.exponentialRampToValueAtTime(0.001, now + 0.07);
-
-        noise.connect(snareFilter).connect(snareEnv).connect(this.musicGain);
-        tone.connect(toneEnv).connect(this.musicGain);
-        noise.start(now);
-        tone.start(now);
-        tone.stop(now + 0.08);
-      }
-
-      // 3. DRIVING HI-HATS (16th notes + Open hat on upbeats)
-      if (this.inRace || beatInBar % 2 === 0) {
-        const hatBuf = this.context.createBuffer(1, this.context.sampleRate * 0.06, this.context.sampleRate);
-        const hdata = hatBuf.getChannelData(0);
-        for (let i = 0; i < hdata.length; i++) hdata[i] = Math.random() * 2 - 1;
-        const hat = this.context.createBufferSource();
-        hat.buffer = hatBuf;
-
-        const hatFilter = this.context.createBiquadFilter();
-        hatFilter.type = 'highpass';
-        hatFilter.frequency.value = 7500;
-
-        const isOpen = (beatInBar === 2 || beatInBar === 6 || beatInBar === 10 || beatInBar === 14);
-        const hatEnv = this.context.createGain();
-        const hatVol = isOpen ? (this.inRace ? 0.16 : 0.08) : (this.inRace ? 0.09 : 0.04);
-        hatEnv.gain.setValueAtTime(hatVol, now);
-        hatEnv.gain.exponentialRampToValueAtTime(0.001, now + (isOpen ? 0.065 : 0.025));
-
-        hat.connect(hatFilter).connect(hatEnv).connect(this.musicGain);
-        hat.start(now);
-      }
-
-      // 4. ROLLING CYBER SYNTH BASSLINE (16th note groove)
-      const bassFreq = (beatInBar % 2 === 0) ? chord.root : chord.root * 2;
-      const bassOsc = this.context.createOscillator();
-      const bassFilter = this.context.createBiquadFilter();
-      const bassEnv = this.context.createGain();
-
-      bassOsc.type = 'sawtooth';
-      bassOsc.frequency.setValueAtTime(bassFreq, now);
-
-      bassFilter.type = 'lowpass';
-      const cutoff = this.inRace ? 650 : 380;
-      bassFilter.frequency.setValueAtTime(cutoff, now);
-      bassFilter.frequency.exponentialRampToValueAtTime(140, now + 0.09);
-      bassFilter.Q.value = 3.5;
-
-      // Sidechain compression feel: slightly duck bass volume on kick beats
-      const isKickStep = (beatInBar % 4 === 0);
-      const bassVol = (this.inRace ? 0.28 : 0.15) * (isKickStep ? 0.55 : 1.0);
-      bassEnv.gain.setValueAtTime(bassVol, now);
-      bassEnv.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
-
-      bassOsc.connect(bassFilter).connect(bassEnv).connect(this.musicGain);
-      bassOsc.start(now);
-      bassOsc.stop(now + 0.11);
-
-      // 5. ENERGETIC MELODIC LEAD ARPEGGIO
-      const noteIdx = (beatInBar * 3 + barIdx) % chord.scale.length;
-      const arpFreq = chord.scale[noteIdx];
-
-      const arpOsc = this.context.createOscillator();
-      const arpFilter = this.context.createBiquadFilter();
-      const arpEnv = this.context.createGain();
-
-      arpOsc.type = 'sawtooth';
-      arpOsc.frequency.setValueAtTime(arpFreq, now);
-
-      arpFilter.type = 'bandpass';
-      arpFilter.frequency.setValueAtTime(this.inRace ? 1600 : 950, now);
-      arpFilter.Q.value = 2.0;
-
-      const arpVol = this.inRace ? 0.08 : 0.045;
-      arpEnv.gain.setValueAtTime(arpVol, now);
-      arpEnv.gain.exponentialRampToValueAtTime(0.001, now + 0.14);
-
-      arpOsc.connect(arpFilter).connect(arpEnv).connect(this.musicGain);
-      arpOsc.start(now);
-      arpOsc.stop(now + 0.15);
-    }, stepDuration);
   }
 
   setSettings(settings) {
     if (settings) this.settings = { ...settings };
-    if (!this.context) return;
-    const now = this.context.currentTime;
-    this.musicGain.gain.setTargetAtTime(this.settings.music ? 0.75 : 0, now, 0.1);
-    if (!this.settings.sound) {
-      this.engineGain.gain.setTargetAtTime(0, now, 0.05);
-      this.screechGain.gain.setTargetAtTime(0, now, 0.05);
-      this.nitroNoiseGain.gain.setTargetAtTime(0, now, 0.05);
-      this.nitroSubGain.gain.setTargetAtTime(0, now, 0.05);
-      this.turboGain.gain.setTargetAtTime(0, now, 0.05);
+
+    // Music volume toggle
+    if (this.audioEl) {
+      if (this.settings.music) {
+        if (this.audioEl.paused) this._playCurrentSong();
+        this.audioEl.volume = 0.7;
+      } else {
+        this.audioEl.pause();
+        this.audioEl.volume = 0;
+      }
+    }
+
+    if (this.musicGain && this.context) {
+      const now = this.context.currentTime;
+      this.musicGain.gain.setTargetAtTime(this.settings.music ? 0.75 : 0, now, 0.1);
+    }
+
+    if (!this.settings.sound && this.context) {
+      const now = this.context.currentTime;
+      if (this.engineGain) this.engineGain.gain.setTargetAtTime(0, now, 0.05);
+      if (this.driftGain) this.driftGain.gain.setTargetAtTime(0, now, 0.05);
+      if (this.nitroGain) this.nitroGain.gain.setTargetAtTime(0, now, 0.05);
     }
   }
 
@@ -377,18 +280,18 @@ export class RaceAudio {
     if (!this.context) return;
     const now = this.context.currentTime;
     if (!active) {
-      this.engineGain.gain.setTargetAtTime(0, now, 0.08);
-      this.screechGain.gain.setTargetAtTime(0, now, 0.06);
-      this.nitroNoiseGain.gain.setTargetAtTime(0, now, 0.06);
-      this.nitroSubGain.gain.setTargetAtTime(0, now, 0.06);
-      this.turboGain.gain.setTargetAtTime(0, now, 0.06);
+      if (this.engineGain) this.engineGain.gain.setTargetAtTime(0, now, 0.08);
+      if (this.driftGain) this.driftGain.gain.setTargetAtTime(0, now, 0.06);
+      if (this.nitroGain) this.nitroGain.gain.setTargetAtTime(0, now, 0.06);
     } else {
-      // Idle rumble when sitting on starting grid
-      this.engineGain.gain.setTargetAtTime(0.12, now, 0.08);
+      // Soft gentle idle purr when on grid
+      if (this.engineGain && this.settings.sound) {
+        this.engineGain.gain.setTargetAtTime(0.06, now, 0.1);
+      }
     }
   }
 
-  // REALISTIC 6-SPEED TRANSMISSION RPM CURVE
+  // 6-Speed gear RPM simulation
   _getGearRpm(speedKmh) {
     const gears = [
       { min: 0,   max: 48 },
@@ -402,124 +305,112 @@ export class RaceAudio {
       const g = gears[i];
       if (speedKmh <= g.max || i === gears.length - 1) {
         const p = Math.max(0, Math.min(1, (speedKmh - g.min) / (g.max - g.min)));
-        return { gear: i + 1, rpm: 0.28 + p * 0.72 };
+        return { gear: i + 1, rpm: 0.25 + p * 0.75 };
       }
     }
     return { gear: 6, rpm: 1.0 };
   }
 
-  // DYNAMIC SPORTS CAR RACE ENGINE AUDIO UPDATE
+  // DYNAMIC SMOOTH SPORTS CAR AUDIO UPDATE
   update(speedKmh, nitroActive, driftIntensity = 0, rawRpmRatio = 0.3) {
-    if (!this.context || !this.engineOsc1) return;
+    if (!this.context || !this.engineLowOsc) return;
     const now = this.context.currentTime;
 
     if (!this.settings.sound || !this.inRace) {
-      this.engineGain.gain.setTargetAtTime(0, now, 0.06);
-      this.screechGain.gain.setTargetAtTime(0, now, 0.05);
-      this.nitroNoiseGain.gain.setTargetAtTime(0, now, 0.05);
-      this.nitroSubGain.gain.setTargetAtTime(0, now, 0.05);
-      this.turboGain.gain.setTargetAtTime(0, now, 0.05);
+      if (this.engineGain) this.engineGain.gain.setTargetAtTime(0, now, 0.06);
+      if (this.driftGain) this.driftGain.gain.setTargetAtTime(0, now, 0.05);
+      if (this.nitroGain) this.nitroGain.gain.setTargetAtTime(0, now, 0.05);
       return;
     }
 
-    // Realistic gear RPM calculation
     const gearInfo = this._getGearRpm(speedKmh);
     const rpm = gearInfo.rpm;
 
-    // Detect gear shifts & trigger exhaust pop
+    // Detect gear shift & trigger subtle bass burble
     if (gearInfo.gear !== this.currentGear) {
       this.currentGear = gearInfo.gear;
-      this._exhaustPop();
+      this._smoothGearBurble();
     }
 
-    // Throaty Boxer fundamental & harmonics tracking RPM
-    const nitroFreqBoost = nitroActive ? 28 : 0;
-    const baseFreq = 48 + rpm * 145 + nitroFreqBoost;
+    // Warm purr frequencies (pleasant, soothing low-mid range)
+    const baseFreq = 42 + rpm * 68 + (nitroActive ? 12 : 0);
 
-    // Crank fundamental
-    this.engineOsc1.frequency.setTargetAtTime(baseFreq, now, 0.04);
-    // 2x cylinder firing harmonic
-    this.engineOsc2.frequency.setTargetAtTime(baseFreq * 2.0, now, 0.04);
-    // Sub-bass exhaust thud
-    this.engineOsc3.frequency.setTargetAtTime(baseFreq * 0.5, now, 0.04);
-    // High RPM acoustic scream
-    this.engineOsc4.frequency.setTargetAtTime(baseFreq * 3.0, now, 0.04);
+    // Sub fundamental
+    this.engineLowOsc.frequency.setTargetAtTime(baseFreq, now, 0.06);
+    // Cylinder purr
+    this.engineMidOsc.frequency.setTargetAtTime(baseFreq * 2.0, now, 0.06);
+    // Sub-bass resonance
+    this.engineSubOsc.frequency.setTargetAtTime(baseFreq * 0.5, now, 0.06);
 
-    // Open lowpass exhaust filter wide as engine revs
-    const targetCutoff = 320 + rpm * 2600 + (nitroActive ? 800 : 0);
-    this.engineFilter.frequency.setTargetAtTime(targetCutoff, now, 0.05);
+    // Warm filter opens gently with RPM (no piercing treble)
+    const targetCutoff = 260 + rpm * 320 + (nitroActive ? 140 : 0);
+    this.engineFilter.frequency.setTargetAtTime(targetCutoff, now, 0.08);
 
-    // Dynamic Engine Volume (Thumping 0.14 at idle up to 0.29 at redline)
-    const baseEngineVol = 0.14 + (rpm * 0.12) + (nitroActive ? 0.04 : 0);
-    this.engineGain.gain.setTargetAtTime(baseEngineVol, now, 0.05);
+    // Smooth, comfortable volume curve (quiet idle 0.05, pleasant cruising 0.12)
+    const baseEngineVol = 0.05 + (rpm * 0.08) + (nitroActive ? 0.03 : 0);
+    this.engineGain.gain.setTargetAtTime(baseEngineVol, now, 0.06);
 
-    // Turbocharger Spool Whine (whistles higher as speed and boost increase)
-    const turboFreq = 1400 + (speedKmh * 8.5) + (nitroActive ? 500 : 0);
-    this.turboOsc.frequency.setTargetAtTime(turboFreq, now, 0.06);
-    const turboVol = Math.min(0.08, (speedKmh / 220) * 0.05 + (nitroActive ? 0.04 : 0));
-    this.turboGain.gain.setTargetAtTime(turboVol, now, 0.06);
+    // Gentle tire drift slip (soft, no harsh screech)
+    const drift = Math.min(1, Math.max(0, driftIntensity));
+    this.driftGain.gain.setTargetAtTime(drift * 0.10, now, 0.05);
 
-    // Tire Screech (Loud, smoking drift friction)
-    const screech = Math.min(1, Math.max(0, driftIntensity));
-    this.screechGain.gain.setTargetAtTime(screech * 0.18, now, 0.04);
-    this.screechFilter.frequency.setTargetAtTime(1300 + screech * 600, now, 0.05);
-
-    // Nitro Rocket Thrust
-    this.nitroNoiseGain.gain.setTargetAtTime(nitroActive ? 0.22 : 0, now, 0.05);
-    this.nitroSubGain.gain.setTargetAtTime(nitroActive ? 0.12 : 0, now, 0.05);
+    // Warm nitro rocket thrust
+    this.nitroGain.gain.setTargetAtTime(nitroActive ? 0.16 : 0, now, 0.06);
 
     this.prevSpeed = speedKmh;
   }
 
-  _exhaustPop() {
+  // Subtle warm exhaust burble on gear change
+  _smoothGearBurble() {
     if (!this.settings.sound || !this.context) return;
     const now = this.context.currentTime;
-    const pop = this.context.createOscillator();
-    const popEnv = this.context.createGain();
+    const burble = this.context.createOscillator();
+    const bGain = this.context.createGain();
     const filter = this.context.createBiquadFilter();
 
-    pop.type = 'triangle';
-    pop.frequency.setValueAtTime(160, now);
-    pop.frequency.exponentialRampToValueAtTime(45, now + 0.05);
+    burble.type = 'triangle';
+    burble.frequency.setValueAtTime(85, now);
+    burble.frequency.exponentialRampToValueAtTime(38, now + 0.08);
 
     filter.type = 'lowpass';
-    filter.frequency.value = 450;
+    filter.frequency.value = 260;
 
-    popEnv.gain.setValueAtTime(0.18, now);
-    popEnv.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
+    bGain.gain.setValueAtTime(0.08, now);
+    bGain.gain.exponentialRampToValueAtTime(0.001, now + 0.09);
 
-    pop.connect(filter).connect(popEnv).connect(this.masterGain);
-    pop.start(now);
-    pop.stop(now + 0.07);
+    burble.connect(filter).connect(bGain).connect(this.masterGain);
+    burble.start(now);
+    burble.stop(now + 0.10);
   }
 
+  // MELODIC, PLEASANT COUNTDOWN CHIMES (Clear musical notes)
   countdownBeep(isGo) {
     if (!this.settings.sound || !this.context) return;
     const now = this.context.currentTime;
 
     if (!isGo) {
-      // Punchy digital arcade tick (520 Hz)
+      // Warm, melodic digital stage chime (A4 - 440 Hz)
       const osc = this.context.createOscillator();
       const gain = this.context.createGain();
-      osc.type = 'sawtooth';
-      osc.frequency.setValueAtTime(520, now);
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(440, now);
       gain.gain.setValueAtTime(0.18, now);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
       osc.connect(gain).connect(this.masterGain);
       osc.start(now);
-      osc.stop(now + 0.19);
+      osc.stop(now + 0.24);
     } else {
-      // Explosive green flag major chord fanfare on GO! (880 Hz + 1100 Hz + 1320 Hz)
-      [880, 1108.73, 1318.51].forEach((freq, i) => {
+      // Harmonious green flag victory chime (Major triad: A5 + C#6 + E6)
+      [880, 1108.73, 1318.51].forEach((freq) => {
         const osc = this.context.createOscillator();
         const gain = this.context.createGain();
-        osc.type = 'sawtooth';
+        osc.type = 'sine';
         osc.frequency.setValueAtTime(freq, now);
         gain.gain.setValueAtTime(0.14, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.42);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
         osc.connect(gain).connect(this.masterGain);
         osc.start(now);
-        osc.stop(now + 0.45);
+        osc.stop(now + 0.48);
       });
     }
   }
@@ -529,14 +420,14 @@ export class RaceAudio {
     const now = this.context.currentTime;
     const osc = this.context.createOscillator();
     const gain = this.context.createGain();
-    osc.type = 'sawtooth';
-    osc.frequency.setValueAtTime(180, now);
-    osc.frequency.exponentialRampToValueAtTime(720, now + 0.26);
-    gain.gain.setValueAtTime(0.16, now);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(220, now);
+    osc.frequency.exponentialRampToValueAtTime(660, now + 0.25);
+    gain.gain.setValueAtTime(0.12, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.28);
     osc.connect(gain).connect(this.masterGain);
     osc.start(now);
-    osc.stop(now + 0.32);
+    osc.stop(now + 0.3);
   }
 
   boostPad() {
@@ -544,14 +435,14 @@ export class RaceAudio {
     const now = this.context.currentTime;
     const osc = this.context.createOscillator();
     const gain = this.context.createGain();
-    osc.type = 'sawtooth';
-    osc.frequency.setValueAtTime(320, now);
-    osc.frequency.exponentialRampToValueAtTime(1180, now + 0.24);
-    gain.gain.setValueAtTime(0.18, now);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.28);
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(330, now);
+    osc.frequency.exponentialRampToValueAtTime(880, now + 0.22);
+    gain.gain.setValueAtTime(0.14, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
     osc.connect(gain).connect(this.masterGain);
     osc.start(now);
-    osc.stop(now + 0.3);
+    osc.stop(now + 0.27);
   }
 
   pickup() {
@@ -561,12 +452,12 @@ export class RaceAudio {
       const osc = this.context.createOscillator();
       const gain = this.context.createGain();
       osc.type = 'sine';
-      osc.frequency.setValueAtTime(freq, now + i * 0.045);
-      gain.gain.setValueAtTime(0.12, now + i * 0.045);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.045 + 0.16);
+      osc.frequency.setValueAtTime(freq, now + i * 0.04);
+      gain.gain.setValueAtTime(0.10, now + i * 0.04);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.04 + 0.16);
       osc.connect(gain).connect(this.masterGain);
-      osc.start(now + i * 0.045);
-      osc.stop(now + i * 0.045 + 0.18);
+      osc.start(now + i * 0.04);
+      osc.stop(now + i * 0.04 + 0.18);
     });
   }
 
@@ -576,13 +467,13 @@ export class RaceAudio {
     [523.25, 659.25, 783.99, 1046.5].forEach((freq, i) => {
       const osc = this.context.createOscillator();
       const gain = this.context.createGain();
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(freq, now + i * 0.07);
-      gain.gain.setValueAtTime(0.14, now + i * 0.07);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.07 + 0.22);
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, now + i * 0.06);
+      gain.gain.setValueAtTime(0.12, now + i * 0.06);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.06 + 0.25);
       osc.connect(gain).connect(this.masterGain);
-      osc.start(now + i * 0.07);
-      osc.stop(now + i * 0.07 + 0.25);
+      osc.start(now + i * 0.06);
+      osc.stop(now + i * 0.06 + 0.28);
     });
   }
 
@@ -593,13 +484,13 @@ export class RaceAudio {
     notes.forEach((freq, i) => {
       const osc = this.context.createOscillator();
       const gain = this.context.createGain();
-      osc.type = 'sawtooth';
-      osc.frequency.setValueAtTime(freq, now + i * 0.09);
-      gain.gain.setValueAtTime(0.16, now + i * 0.09);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.09 + 0.38);
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, now + i * 0.08);
+      gain.gain.setValueAtTime(0.14, now + i * 0.08);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.08 + 0.35);
       osc.connect(gain).connect(this.masterGain);
-      osc.start(now + i * 0.09);
-      osc.stop(now + i * 0.09 + 0.42);
+      osc.start(now + i * 0.08);
+      osc.stop(now + i * 0.08 + 0.38);
     });
   }
 
@@ -607,41 +498,30 @@ export class RaceAudio {
     if (!this.settings.sound || !this.context) return;
     const now = this.context.currentTime;
 
-    // Metallic crunch noise
-    const bufferSize = this.context.sampleRate * 0.18;
-    const noiseBuf = this.context.createBuffer(1, bufferSize, this.context.sampleRate);
-    const data = noiseBuf.getChannelData(0);
-    for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
-    const crunch = this.context.createBufferSource();
-    crunch.buffer = noiseBuf;
-
-    const filter = this.context.createBiquadFilter();
-    filter.type = 'lowpass';
-    filter.frequency.value = 650;
-
-    const crunchGain = this.context.createGain();
-    crunchGain.gain.setValueAtTime(0.24, now);
-    crunchGain.gain.exponentialRampToValueAtTime(0.001, now + 0.16);
-    crunch.connect(filter).connect(crunchGain).connect(this.masterGain);
-    crunch.start(now);
-
-    // Deep sub-bass barrier impact thud
+    // Soft muffled thud (no harsh metallic shriek)
     const sub = this.context.createOscillator();
     const subGain = this.context.createGain();
-    sub.type = 'sine';
-    sub.frequency.setValueAtTime(145, now);
-    sub.frequency.exponentialRampToValueAtTime(32, now + 0.15);
-    subGain.gain.setValueAtTime(0.32, now);
-    subGain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
-    sub.connect(subGain).connect(this.masterGain);
+    const filter = this.context.createBiquadFilter();
+
+    sub.type = 'triangle';
+    sub.frequency.setValueAtTime(120, now);
+    sub.frequency.exponentialRampToValueAtTime(32, now + 0.14);
+
+    filter.type = 'lowpass';
+    filter.frequency.value = 350;
+
+    subGain.gain.setValueAtTime(0.22, now);
+    subGain.gain.exponentialRampToValueAtTime(0.001, now + 0.16);
+
+    sub.connect(filter).connect(subGain).connect(this.masterGain);
     sub.start(now);
-    sub.stop(now + 0.2);
+    sub.stop(now + 0.18);
   }
 
   dispose() {
-    if (this.musicTimer) {
-      clearInterval(this.musicTimer);
-      this.musicTimer = null;
+    if (this.audioEl) {
+      this.audioEl.pause();
+      this.audioEl = null;
     }
     if (this.context) {
       this.context.close().catch(() => {});
