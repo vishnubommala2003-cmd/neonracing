@@ -258,6 +258,9 @@ export class RacingGame {
     this.applyTrack('city');
 
     window.addEventListener('resize', this._resize, { passive: true });
+    window.addEventListener('orientationchange', this._resize, { passive: true });
+    document.addEventListener('fullscreenchange', this._resize, { passive: true });
+    document.addEventListener('webkitfullscreenchange', this._resize, { passive: true });
     this.clock.start();
     this.renderer.setAnimationLoop(this._frame);
   }
@@ -2354,5 +2357,8 @@ export class RacingGame {
     this.renderer.dispose();
     this.particles.dispose();
     window.removeEventListener('resize', this._resize);
+    window.removeEventListener('orientationchange', this._resize);
+    document.removeEventListener('fullscreenchange', this._resize);
+    document.removeEventListener('webkitfullscreenchange', this._resize);
   }
 }

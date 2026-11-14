@@ -13,13 +13,30 @@
   box-sizing: border-box;
 }
 
+html, body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  touch-action: pan-x pan-y;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
 body {
   margin: 0;
   background: radial-gradient(ellipse at 50% 0%, #174c79 0, #07172a 48%, #020813 100%);
   color: #fff;
   font-family: 'Rajdhani', sans-serif;
   min-height: 100vh;
+  min-height: 100dvh;
   overflow-x: hidden;
+}
+
+body.in-race {
+  overflow: hidden !important;
+  touch-action: none !important;
 }
 
 .app-shell {
@@ -817,21 +834,167 @@ main {
 }
 
 /* SCREEN 5: THE 3D RACE */
-.race-hud {
+/* SCREEN 5: THE 3D RACE — TRUE FULLSCREEN MOBILE & DESKTOP */
+#race.screen.active {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100dvh;
+  height: 100vh;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  z-index: 1000;
+  background: #000;
+  display: block;
+  touch-action: none;
+}
+
+#race.screen.active .road-scene {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
+  margin: 0;
+  padding: 0;
+}
+
+#race.screen.active #scene-root {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+#race.screen.active #scene-root canvas {
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
+}
+
+#race.screen.active .race-hud {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 30;
   display: flex;
   justify-content: space-between;
-  background: #071c33;
-  padding: 14px 18px;
-  border: 1px solid #1e79a9;
+  align-items: center;
+  gap: 12px;
+  background: linear-gradient(180deg, rgba(3, 14, 27, 0.94) 0%, rgba(3, 14, 27, 0.72) 65%, transparent 100%);
+  padding: max(10px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) 14px max(16px, env(safe-area-inset-left));
+  border: none;
+  border-bottom: 1px solid rgba(0, 212, 255, 0.22);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   font-weight: 700;
   font-size: 15px;
   letter-spacing: 1px;
+  pointer-events: none;
 }
 
-.race-hud b {
+#race.screen.active .race-hud > * {
+  pointer-events: auto;
+}
+
+#race.screen.active .race-hud b {
   color: var(--gold);
   font-family: 'Barlow Condensed';
-  font-size: 18px;
+  font-size: 19px;
+}
+
+.hud-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.hud-action-btn {
+  background: rgba(7, 27, 50, 0.85);
+  border: 1px solid rgba(0, 212, 255, 0.45);
+  color: #00d4ff;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font: 700 13px 'Barlow Condensed', sans-serif;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  touch-action: manipulation;
+}
+
+.hud-action-btn:hover,
+.hud-action-btn:active {
+  background: #00d4ff;
+  color: #031120;
+  box-shadow: 0 0 14px rgba(0, 212, 255, 0.6);
+}
+
+.hud-action-btn.exit {
+  border-color: rgba(255, 70, 70, 0.5);
+  color: #ff6060;
+}
+
+.hud-action-btn.exit:hover,
+.hud-action-btn.exit:active {
+  background: #ff4040;
+  color: #fff;
+  box-shadow: 0 0 14px rgba(255, 64, 64, 0.6);
+}
+
+.fullscreen-toggle-btn {
+  background: rgba(7, 27, 50, 0.9);
+  border: 1px solid rgba(0, 212, 255, 0.5);
+  color: #00d4ff;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font: 700 12px 'Barlow Condensed', sans-serif;
+  letter-spacing: 1px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: all 0.2s ease;
+  touch-action: manipulation;
+}
+
+.fullscreen-toggle-btn:hover,
+.fullscreen-toggle-btn:active {
+  background: rgba(0, 212, 255, 0.25);
+  border-color: #00d4ff;
+  box-shadow: 0 0 14px rgba(0, 212, 255, 0.5);
+  color: #fff;
+}
+
+#race.screen.active .race-controls {
+  position: absolute;
+  bottom: max(16px, env(safe-area-inset-bottom));
+  left: max(16px, env(safe-area-inset-left));
+  right: max(16px, env(safe-area-inset-right));
+  z-index: 30;
+  margin: 0;
+  pointer-events: none;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+
+#race.screen.active .steer-controls-cluster,
+#race.screen.active .pedal-controls-cluster {
+  pointer-events: auto;
+  display: flex;
+  gap: 12px;
+}
+
+#race.screen.active .minimap-container {
+  bottom: max(85px, calc(env(safe-area-inset-bottom) + 80px));
+  left: max(16px, env(safe-area-inset-left));
+  z-index: 25;
+}
+
+#race.screen.active .race-help {
+  display: none;
 }
 
 .road-scene {
@@ -1354,25 +1517,41 @@ footer span {
   }
   .race-hud {
     font-size: 12px;
-    padding: 10px 7px;
+    padding: max(6px, env(safe-area-inset-top)) 10px 8px 10px;
   }
-  .road-scene {
-    height: 380px;
+  #race.screen.active .race-hud span {
+    font-size: 11px;
+    line-height: 1.1;
   }
-  .race-controls {
-    flex-direction: column;
-    gap: 8px;
+  #race.screen.active .race-hud b {
+    font-size: 15px;
   }
-  .steer-controls-cluster,
-  .pedal-controls-cluster {
-    width: 100%;
-    display: flex;
+  #race.screen.active .minimap-container {
+    width: 90px;
+    height: 90px;
+    bottom: max(75px, calc(env(safe-area-inset-bottom) + 70px));
+  }
+  .steer-btn {
+    min-width: 65px;
+    height: 48px;
+    font-size: 13px;
+    padding: 8px 6px;
+  }
+  .accelerate-btn {
+    min-width: 80px;
+    height: 48px;
+    font-size: 13px;
+    padding: 8px 8px;
+  }
+  .nitro-btn, .brake-btn {
+    height: 48px;
+    font-size: 13px;
+    padding: 8px 8px;
   }
   .control-btn {
-    flex: 1;
     min-width: 0;
-    padding: 14px 6px;
-    font-size: 14px;
+    padding: 10px 6px;
+    font-size: 13px;
   }
   .upgrade-row {
     grid-template-columns: 1fr auto;

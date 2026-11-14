@@ -2,7 +2,11 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-touch-fullscreen" content="yes">
   <meta name="theme-color" content="#061426">
   <title>Neon GT Racing — GT 86 3D Street Racing</title>
   <link rel="stylesheet" href="./src/style.css">
@@ -27,6 +31,7 @@
         <span title="Race Coins">🪙 <b id="coins">542</b></span>
         <span title="Gems">💎 <b id="gems">0</b></span>
         <span title="Championship Stars">⭐ <b id="stars">3</b></span>
+        <button class="fullscreen-toggle-btn" id="btn-fullscreen-top" aria-label="Toggle Fullscreen" title="Toggle Fullscreen">⛶ FULLSCREEN</button>
       </div>
     </header>
 
@@ -205,9 +210,13 @@
         <div class="race-hud">
           <span>🏁 <span id="hud-track-title">LONDON CIRCUIT</span></span>
           <span>LAP <b id="hud-lap">1 / 3</b></span>
-          <span>POSITION <b id="position">1 / 8</b></span>
+          <span>POS <b id="position">1 / 8</b></span>
           <span>SPEED <b id="speed">0</b> km/h</span>
           <span>DRIFT <b id="drift-dist">0 m</b></span>
+          <div class="hud-actions">
+            <button class="hud-action-btn" id="btn-fullscreen-hud" aria-label="Toggle Fullscreen" title="Toggle Fullscreen">⛶</button>
+            <button class="hud-action-btn exit" id="btn-exit-race" title="Exit to Garage">✕ EXIT</button>
+          </div>
         </div>
 
         <!-- 3D THREE.JS CANVAS VIEWPORT -->

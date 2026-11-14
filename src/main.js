@@ -86,6 +86,7 @@ function showScreen(id) {
   currentScreen = id;
   screens.forEach((s) => s.classList.toggle('active', s.id === id));
   navButtons.forEach((btn) => btn.classList.toggle('active', btn.dataset.screen === id));
+  document.body.classList.toggle('in-race', id === 'race');
 
   window.scrollTo({ top: 0, behavior: 'smooth' });
 
@@ -574,8 +575,57 @@ async function renderLeaderboard() {
   }
 }
 
+// Fullscreen Management for Mobile & Desktop
+function requestFullscreenSafe() {
+  const docEl = document.documentElement;
+  const rfs = docEl.requestFullscreen || docEl.webkitRequestFullscreen || docEl.mozRequestFullScreen || docEl.msRequestFullscreen;
+  if (rfs && !document.fullscreenElement && !document.webkitFullscreenElement) {
+    rfs.call(docEl).catch(() => {});
+  }
+  if (screen.orientation && screen.orientation.lock) {
+    screen.orientation.lock('landscape').catch(() => {});
+  }
+}
+
+function toggleFullscreen() {
+  if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+    requestFullscreenSafe();
+  } else {
+    const efs = document.exitFullscreen || document.webkitExitFullscreen || document.mozCancelFullScreen || document.msExitFullscreen;
+    if (efs) efs.call(document).catch(() => {});
+  }
+}
+
+$('#btn-fullscreen-top')?.addEventListener('click', (e) => {
+  e.preventDefault();
+  toggleFullscreen();
+});
+
+$('#btn-fullscreen-hud')?.addEventListener('click', (e) => {
+  e.preventDefault();
+  toggleFullscreen();
+});
+
+$('#btn-exit-race')?.addEventListener('click', (e) => {
+  e.preventDefault();
+  audio.setInRace(false);
+  game.clearRaceVehicles();
+  showScreen('garage');
+});
+
+['fullscreenchange', 'webkitfullscreenchange', 'orientationchange', 'resize'].forEach((ev) => {
+  window.addEventListener(ev, () => {
+    requestAnimationFrame(() => {
+      game.resize();
+    });
+  });
+});
+
 // Start Race Trigger
 function launchRace() {
+  // Automatically activate immersive fullscreen on mobile / touch
+  requestFullscreenSafe();
+
   const curLvl = LEVELS.find((l) => l.trackKey === selectedTrackKey) || LEVELS.find((l) => l.level === saved.currentLevel) || LEVELS[0];
   selectedTrackKey = curLvl.trackKey || 'london';
 
