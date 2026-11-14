@@ -1,0 +1,5 @@
+node_modules/
+dist/
+extracted_demo/
+.DS_Store
+*.log

@@ -1,0 +1,543 @@
+{
+  "profile": {
+    "username": "ApexRacer",
+    "credits": 16350,
+    "currentLevel": 3,
+    "unlockedLevel": 3,
+    "levelStars": {
+      "1": 3,
+      "2": 0,
+      "3": 0,
+      "4": 0,
+      "5": 0,
+      "6": 0,
+      "7": 0,
+      "8": 0
+    },
+    "ownedCars": [
+      "triumph",
+      "vortex"
+    ],
+    "upgrades": {
+      "triumph": {
+        "speed": 0,
+        "nitro": 0,
+        "handling": 0,
+        "accel": 0
+      },
+      "vortex": {
+        "speed": 0,
+        "nitro": 0,
+        "handling": 0,
+        "accel": 0
+      }
+    },
+    "customs": {
+      "triumph": {
+        "color": 39423
+      },
+      "vortex": {
+        "color": 16728112,
+        "underglow": 3732930
+      }
+    },
+    "bestTimes": {
+      "london": "00:37.50",
+      "city": "00:48:35",
+      "desert": 30.433799999997092,
+      "tokyo": 39.676100000008866
+    },
+    "totalRaces": 14,
+    "totalWins": 9,
+    "totalDriftDistance": 1440,
+    "music": true,
+    "sound": true,
+    "quality": "high",
+    "steeringMode": "buttons",
+    "haptics": true,
+    "coins": 1637,
+    "gems": 0
+  },
+  "leaderboard": {
+    "city": [
+      {
+        "name": "You",
+        "car": "Triumph",
+        "time": 33.92,
+        "driftDistance": 0,
+        "position": 1,
+        "date": "2026-11-13",
+        "rank": 1
+      },
+      {
+        "rank": 2,
+        "name": "ApexGhost",
+        "car": "Viper GT",
+        "time": 74.2,
+        "date": "2026-11-12"
+      },
+      {
+        "rank": 3,
+        "name": "ShadowRacer",
+        "car": "Triumph",
+        "time": 76.5,
+        "date": "2026-11-12"
+      },
+      {
+        "rank": 4,
+        "name": "NeonPulse",
+        "car": "Vortex",
+        "time": 78.1,
+        "date": "2026-11-13"
+      },
+      {
+        "rank": 5,
+        "name": "CyberDrifter",
+        "car": "Titan RS",
+        "time": 80.4,
+        "date": "2026-11-13"
+      }
+    ],
+    "london": [
+      {
+        "name": "You (GT 86)",
+        "car": "GT 86",
+        "time": 30.7,
+        "driftDistance": 140,
+        "position": 1,
+        "date": "2026-11-14",
+        "rank": 1
+      },
+      {
+        "name": "You (GT 86)",
+        "car": "GT 86",
+        "time": 31,
+        "driftDistance": 140,
+        "position": 1,
+        "date": "2026-11-14",
+        "rank": 2
+      },
+      {
+        "name": "You (GT 86)",
+        "car": "GT 86",
+        "time": 31.01,
+        "driftDistance": 140,
+        "position": 1,
+        "date": "2026-11-14",
+        "rank": 3
+      },
+      {
+        "name": "You",
+        "car": "Triumph",
+        "time": 31.82,
+        "driftDistance": 0,
+        "position": 1,
+        "date": "2026-11-13",
+        "rank": 4
+      },
+      {
+        "name": "You (GT 86)",
+        "car": "GT 86",
+        "time": 32.47,
+        "driftDistance": 140,
+        "position": 1,
+        "date": "2026-11-14",
+        "rank": 5
+      },
+      {
+        "name": "You (GT 86)",
+        "car": "GT 86",
+        "time": 33.76,
+        "driftDistance": 140,
+        "position": 3,
+        "date": "2026-11-14",
+        "rank": 6
+      },
+      {
+        "name": "You (GT 86)",
+        "car": "GT 86",
+        "time": 35.53,
+        "driftDistance": 140,
+        "position": 5,
+        "date": "2026-11-14",
+        "rank": 7
+      },
+      {
+        "name": "You (GT 86)",
+        "car": "GT 86",
+        "time": 36.4,
+        "driftDistance": 140,
+        "position": 6,
+        "date": "2026-11-14",
+        "rank": 8
+      },
+      {
+        "name": "You (GT 86)",
+        "car": "GT 86",
+        "time": 37.5,
+        "driftDistance": 140,
+        "position": 7,
+        "date": "2026-11-14",
+        "rank": 9
+      },
+      {
+        "name": "You (GT 86)",
+        "car": "GT 86",
+        "time": 38.19,
+        "driftDistance": 140,
+        "position": 8,
+        "date": "2026-11-14",
+        "rank": 10
+      },
+      {
+        "name": "ApexRacer",
+        "car": "Triumph",
+        "time": 72.4,
+        "driftDistance": 180,
+        "position": 1,
+        "date": "2026-11-13",
+        "rank": 11
+      },
+      {
+        "rank": 12,
+        "name": "BigBenRacer",
+        "car": "Triumph",
+        "time": 78.4,
+        "date": "2026-11-12"
+      },
+      {
+        "rank": 13,
+        "name": "RoyalApex",
+        "car": "Phantom",
+        "time": 80.1,
+        "date": "2026-11-12"
+      },
+      {
+        "rank": 14,
+        "name": "ThamesDrift",
+        "car": "Blade R",
+        "time": 82.5,
+        "date": "2026-11-13"
+      },
+      {
+        "rank": 15,
+        "name": "SpeedKingUK",
+        "car": "Specter",
+        "time": 84.9,
+        "date": "2026-11-13"
+      }
+    ],
+    "desert": [
+      {
+        "name": "You",
+        "car": "Triumph",
+        "time": 30.43,
+        "driftDistance": 0,
+        "position": 1,
+        "date": "2026-11-13",
+        "rank": 1
+      },
+      {
+        "rank": 2,
+        "name": "RedlineOutlaw",
+        "car": "Titan RS",
+        "time": 82,
+        "date": "2026-11-11"
+      },
+      {
+        "rank": 3,
+        "name": "CanyonStorm",
+        "car": "Viper GT",
+        "time": 83.8,
+        "date": "2026-11-12"
+      },
+      {
+        "rank": 4,
+        "name": "DuneRider",
+        "car": "Triumph",
+        "time": 85.2,
+        "date": "2026-11-13"
+      }
+    ],
+    "tokyo": [
+      {
+        "name": "You",
+        "car": "Triumph",
+        "time": 39.68,
+        "driftDistance": 0,
+        "position": 1,
+        "date": "2026-11-13",
+        "rank": 1
+      },
+      {
+        "rank": 2,
+        "name": "ShutoDemon",
+        "car": "Phantom",
+        "time": 77.2,
+        "date": "2026-11-12"
+      },
+      {
+        "rank": 3,
+        "name": "MidnightWangan",
+        "car": "Vortex",
+        "time": 79,
+        "date": "2026-11-12"
+      },
+      {
+        "rank": 4,
+        "name": "TokyoApex",
+        "car": "Triumph",
+        "time": 81.3,
+        "date": "2026-11-13"
+      }
+    ],
+    "coastal": [
+      {
+        "rank": 1,
+        "name": "PacificDrift",
+        "car": "Blade R",
+        "time": 71.5,
+        "date": "2026-11-11"
+      },
+      {
+        "rank": 2,
+        "name": "OceanBreeze",
+        "car": "Triumph",
+        "time": 73.8,
+        "date": "2026-11-12"
+      },
+      {
+        "rank": 3,
+        "name": "CliffHanger",
+        "car": "Specter",
+        "time": 75.4,
+        "date": "2026-11-13"
+      }
+    ],
+    "alpine": [
+      {
+        "rank": 1,
+        "name": "MountainKing",
+        "car": "Viper GT",
+        "time": 80.5,
+        "date": "2026-11-12"
+      },
+      {
+        "rank": 2,
+        "name": "SnowDrifter",
+        "car": "Triumph",
+        "time": 82.9,
+        "date": "2026-11-12"
+      },
+      {
+        "rank": 3,
+        "name": "AlpineApex",
+        "car": "Titan RS",
+        "time": 85.1,
+        "date": "2026-11-13"
+      }
+    ],
+    "cyber": [
+      {
+        "rank": 1,
+        "name": "NeoGridMaster",
+        "car": "Phantom",
+        "time": 76.8,
+        "date": "2026-11-12"
+      },
+      {
+        "rank": 2,
+        "name": "SynthRunner",
+        "car": "Vortex",
+        "time": 78.9,
+        "date": "2026-11-12"
+      },
+      {
+        "rank": 3,
+        "name": "CyberRacerX",
+        "car": "Triumph",
+        "time": 80.7,
+        "date": "2026-11-13"
+      }
+    ],
+    "orbital": [
+      {
+        "rank": 1,
+        "name": "HyperionChamp",
+        "car": "Phantom",
+        "time": 84.1,
+        "date": "2026-11-11"
+      },
+      {
+        "rank": 2,
+        "name": "CosmicRider",
+        "car": "Titan RS",
+        "time": 86.4,
+        "date": "2026-11-12"
+      },
+      {
+        "rank": 3,
+        "name": "SpaceVelocity",
+        "car": "Triumph",
+        "time": 88.2,
+        "date": "2026-11-13"
+      }
+    ]
+  },
+  "raceHistory": [
+    {
+      "name": "You (GT 86)",
+      "car": "GT 86",
+      "time": 37.5,
+      "driftDistance": 140,
+      "position": 7,
+      "date": "2026-11-14",
+      "rank": 9,
+      "trackId": "london",
+      "timestamp": "2026-11-14T06:18:55.607Z"
+    },
+    {
+      "name": "You (GT 86)",
+      "car": "GT 86",
+      "time": 38.19,
+      "driftDistance": 140,
+      "position": 8,
+      "date": "2026-11-14",
+      "rank": 9,
+      "trackId": "london",
+      "timestamp": "2026-11-14T06:15:52.125Z"
+    },
+    {
+      "name": "You (GT 86)",
+      "car": "GT 86",
+      "time": 31,
+      "driftDistance": 140,
+      "position": 1,
+      "date": "2026-11-14",
+      "rank": 2,
+      "trackId": "london",
+      "timestamp": "2026-11-14T06:05:22.346Z"
+    },
+    {
+      "name": "You (GT 86)",
+      "car": "GT 86",
+      "time": 30.7,
+      "driftDistance": 140,
+      "position": 1,
+      "date": "2026-11-14",
+      "rank": 1,
+      "trackId": "london",
+      "timestamp": "2026-11-14T06:04:44.867Z"
+    },
+    {
+      "name": "You (GT 86)",
+      "car": "GT 86",
+      "time": 35.53,
+      "driftDistance": 140,
+      "position": 5,
+      "date": "2026-11-14",
+      "rank": 5,
+      "trackId": "london",
+      "timestamp": "2026-11-14T06:04:07.600Z"
+    },
+    {
+      "name": "You (GT 86)",
+      "car": "GT 86",
+      "time": 36.4,
+      "driftDistance": 140,
+      "position": 6,
+      "date": "2026-11-14",
+      "rank": 5,
+      "trackId": "london",
+      "timestamp": "2026-11-14T05:55:37.775Z"
+    },
+    {
+      "name": "You (GT 86)",
+      "car": "GT 86",
+      "time": 32.47,
+      "driftDistance": 140,
+      "position": 1,
+      "date": "2026-11-14",
+      "rank": 3,
+      "trackId": "london",
+      "timestamp": "2026-11-14T05:43:04.360Z"
+    },
+    {
+      "name": "You (GT 86)",
+      "car": "GT 86",
+      "time": 31.01,
+      "driftDistance": 140,
+      "position": 1,
+      "date": "2026-11-14",
+      "rank": 1,
+      "trackId": "london",
+      "timestamp": "2026-11-14T05:36:44.090Z"
+    },
+    {
+      "name": "You (GT 86)",
+      "car": "GT 86",
+      "time": 33.76,
+      "driftDistance": 140,
+      "position": 3,
+      "date": "2026-11-14",
+      "rank": 2,
+      "trackId": "london",
+      "timestamp": "2026-11-14T05:36:03.899Z"
+    },
+    {
+      "name": "You",
+      "car": "Triumph",
+      "time": 39.68,
+      "driftDistance": 0,
+      "position": 1,
+      "date": "2026-11-13",
+      "rank": 1,
+      "trackId": "tokyo",
+      "timestamp": "2026-11-13T12:54:40.275Z"
+    },
+    {
+      "name": "You",
+      "car": "Triumph",
+      "time": 30.43,
+      "driftDistance": 0,
+      "position": 1,
+      "date": "2026-11-13",
+      "rank": 1,
+      "trackId": "desert",
+      "timestamp": "2026-11-13T12:53:41.010Z"
+    },
+    {
+      "name": "You",
+      "car": "Triumph",
+      "time": 31.82,
+      "driftDistance": 0,
+      "position": 1,
+      "date": "2026-11-13",
+      "rank": 1,
+      "trackId": "london",
+      "timestamp": "2026-11-13T12:52:29.785Z"
+    },
+    {
+      "name": "You",
+      "car": "Triumph",
+      "time": 33.92,
+      "driftDistance": 0,
+      "position": 1,
+      "date": "2026-11-13",
+      "rank": 1,
+      "trackId": "city",
+      "timestamp": "2026-11-13T12:51:09.319Z"
+    },
+    {
+      "name": "ApexRacer",
+      "car": "Triumph",
+      "time": 72.4,
+      "driftDistance": 180,
+      "position": 1,
+      "date": "2026-11-13",
+      "rank": 1,
+      "trackId": "london",
+      "timestamp": "2026-11-13T12:48:47.676Z"
+    }
+  ]
+}

@@ -1,0 +1,364 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#061426">
+  <title>Neon GT Racing — GT 86 3D Street Racing</title>
+  <link rel="stylesheet" href="./src/style.css">
+</head>
+<body>
+  <div class="app-shell">
+    <!-- TOP NAVIGATION BAR -->
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-mark">GT</span>
+        <span>NEON <b>RACING</b></span>
+      </div>
+      <nav class="top-links">
+        <button data-screen="garage" class="active">Garage</button>
+        <button data-screen="events">Events</button>
+        <button data-screen="levels">Levels (1-8)</button>
+        <button data-screen="upgrade">Workshop</button>
+        <button data-screen="rewards">Rewards</button>
+        <button data-screen="leaderboard">Leaderboard</button>
+      </nav>
+      <div class="wallet">
+        <span title="Race Coins">🪙 <b id="coins">542</b></span>
+        <span title="Gems">💎 <b id="gems">0</b></span>
+        <span title="Championship Stars">⭐ <b id="stars">3</b></span>
+      </div>
+    </header>
+
+    <main>
+      <!-- SCREEN 1: THE GARAGE -->
+      <section class="screen active" id="garage">
+        <div class="garage-grid">
+          <aside class="stats panel">
+            <p class="eyebrow">YOUR GARAGE</p>
+            <h1>GT <em>86</em></h1>
+            <div class="rating">RATING <strong id="car-rating">240.0</strong></div>
+            <div class="stat">
+              <div><span>Top speed</span><b id="garage-speed-text">188 km/h</b></div>
+              <div class="meter"><i id="garage-speed-bar" style="width:68%"></i></div>
+            </div>
+            <div class="stat">
+              <div><span>Nitro</span><b id="garage-nitro-text">7 s</b></div>
+              <div class="meter"><i id="garage-nitro-bar" style="width:48%"></i></div>
+            </div>
+            <div class="stat">
+              <div><span>Acceleration</span><b id="garage-accel-text">15 km/h</b></div>
+              <div class="meter"><i id="garage-accel-bar" style="width:38%"></i></div>
+            </div>
+            <div class="stat">
+              <div><span>Handling</span><b id="garage-handling-text">30 ss</b></div>
+              <div class="meter"><i id="garage-handling-bar" style="width:82%"></i></div>
+            </div>
+            <button class="outline-btn" data-screen="upgrade">⚙ Upgrade car</button>
+          </aside>
+
+          <div class="hero-car">
+            <div class="hero-car-media">
+              <img src="/toyota-gt86.jpg" alt="Toyota GT 86 Electric Blue Coupe" id="hero-car-img" class="hero-car-photo" />
+              <div class="hero-car-glow"></div>
+              <div class="hero-car-badge">GT 86</div>
+            </div>
+            <div class="hero-caption">
+              <span>TOYOTA GT 86 COUPE</span>
+              <b>BUILT TO RACE</b>
+            </div>
+          </div>
+
+          <aside class="challenge panel">
+            <p class="eyebrow">FEATURED EVENT</p>
+            <h2 id="featured-title">Amateur Challenge</h2>
+            <div class="event-art">
+              <span id="featured-flag">🇬🇧</span>
+              <b id="featured-city">LONDON</b>
+              <small id="featured-circuit">STREET CIRCUIT</small>
+            </div>
+            <p class="best-time">BEST TIME <strong id="featured-best-time">00:51:72</strong></p>
+            <button class="primary-btn" id="enter-event-btn" data-screen="events">ENTER EVENT　➜</button>
+          </aside>
+        </div>
+
+        <div class="mode-grid">
+          <button class="mode-card selected" data-screen="events" data-mode="racing">
+            <span>🏁</span><b>RACING</b><small>Start the race</small>
+          </button>
+          <button class="mode-card gold" data-screen="levels" data-mode="championship">
+            <span>🏆</span><b>CHAMPIONSHIP</b><small>Win the league</small>
+          </button>
+          <button class="mode-card cyan" data-screen="events" data-mode="club">
+            <span>👥</span><b>CLUB LEAGUE</b><small>Race with club</small>
+          </button>
+          <button class="mode-card" data-screen="leaderboard" data-mode="rivals">
+            <span>⚔️</span><b>URBAN RIVALS</b><small>Compete online</small>
+          </button>
+          <button class="mode-card purple" data-screen="events" data-mode="masters">
+            <span>★</span><b>CLASSIC MASTERS</b><small>Master the classic</small>
+          </button>
+        </div>
+      </section>
+
+      <!-- SCREEN 2: CAREER EVENTS (8 TRACKS) -->
+      <section class="screen" id="events">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">CAREER MODE</p>
+            <h1>Choose your <em>event</em></h1>
+          </div>
+          <button class="ghost-btn" data-screen="garage">← Garage</button>
+        </div>
+        <div class="event-grid" id="events-grid">
+          <!-- Populated dynamically with the 8 levels / roads -->
+        </div>
+        <div class="event-footer">
+          <div>
+            <span class="eyebrow">SELECTED EVENT</span>
+            <h2 id="selected-event">London Amateur Challenge</h2>
+            <p id="selected-event-desc">Recommended car rating: <b>235</b> · Your car: <b id="footer-car-rating">240</b></p>
+          </div>
+          <button class="primary-btn" id="choose-car">SELECT CAR　➜</button>
+        </div>
+      </section>
+
+      <!-- SCREEN 3: CHAMPIONSHIP CAMPAIGN LEVELS (1-8) -->
+      <section class="screen" id="levels">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">CHAMPIONSHIP CAMPAIGN</p>
+            <h1>Campaign <em>Levels (1-8)</em></h1>
+          </div>
+          <button class="ghost-btn" data-screen="garage">← Garage</button>
+        </div>
+        <div class="levels-overview panel">
+          <div class="level-progress-summary">
+            <div>
+              <span class="eyebrow">PROGRESSION</span>
+              <h2>CURRENT LEVEL: <span id="champ-current-lvl" style="color:var(--gold)">LEVEL 1</span></h2>
+            </div>
+            <div class="stars-summary">
+              <span>TOTAL STARS: <strong id="champ-total-stars" style="color:var(--gold)">0 / 24</strong> ⭐</span>
+            </div>
+          </div>
+          <div class="levels-grid" id="levels-grid-cards">
+            <!-- Dynamic 8 Level Cards with Road Themes -->
+          </div>
+        </div>
+      </section>
+
+      <!-- SCREEN 4: VEHICLE SELECT -->
+      <section class="screen" id="car-select">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">VEHICLE SELECT</p>
+            <h1>Choose your <em>machine</em></h1>
+          </div>
+          <button class="ghost-btn" data-screen="events">← Events</button>
+        </div>
+        <div class="select-layout">
+          <div class="select-car panel">
+            <div class="select-car-preview">
+              <img src="/toyota-gt86.jpg" alt="Toyota GT 86 Electric Blue Coupe" id="select-car-img" class="select-car-photo" />
+              <div class="select-car-glow"></div>
+            </div>
+            <h2>GT 86 <span id="select-car-rating">240.0</span></h2>
+            <p>CLASS C · OWNED</p>
+            <!-- Car Color Paint Swatches -->
+            <div class="color-palette-label">FACTORY FINISHES</div>
+            <div class="color-swatches" id="color-swatches">
+              <button class="color-dot active" data-color="0x0099ff" style="background:#0099ff" title="Electric Cyan Blue"></button>
+              <button class="color-dot" data-color="0xe62e2e" style="background:#e62e2e" title="Radiant Crimson"></button>
+              <button class="color-dot" data-color="0xffb800" style="background:#ffb800" title="Sunburst Yellow"></button>
+              <button class="color-dot" data-color="0x15191e" style="background:#15191e" title="Midnight Black"></button>
+              <button class="color-dot" data-color="0x00e6a8" style="background:#00e6a8" title="Neon Emerald"></button>
+              <button class="color-dot" data-color="0x9d4edd" style="background:#9d4edd" title="Ultraviolet Purple"></button>
+            </div>
+          </div>
+          <div class="panel select-stats">
+            <h2>Vehicle performance</h2>
+            <div class="stat">
+              <div><span>Speed</span><b id="sel-stat-speed">188 km/h</b></div>
+              <div class="meter"><i id="sel-meter-speed" style="width:68%"></i></div>
+            </div>
+            <div class="stat">
+              <div><span>Nitro</span><b id="sel-stat-nitro">7 seconds</b></div>
+              <div class="meter"><i id="sel-meter-nitro" style="width:48%"></i></div>
+            </div>
+            <div class="stat">
+              <div><span>Acceleration</span><b id="sel-stat-accel">15 km/h</b></div>
+              <div class="meter"><i id="sel-meter-accel" style="width:38%"></i></div>
+            </div>
+            <div class="stat">
+              <div><span>Handling</span><b id="sel-stat-handling">30</b></div>
+              <div class="meter"><i id="sel-meter-handling" style="width:82%"></i></div>
+            </div>
+            <button class="primary-btn full" id="start-race">START RACE　🏁</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- SCREEN 5: THE 3D RACE -->
+      <section class="screen" id="race">
+        <!-- TOP HUD -->
+        <div class="race-hud">
+          <span>🏁 <span id="hud-track-title">LONDON CIRCUIT</span></span>
+          <span>LAP <b id="hud-lap">1 / 3</b></span>
+          <span>POSITION <b id="position">1 / 8</b></span>
+          <span>SPEED <b id="speed">0</b> km/h</span>
+          <span>DRIFT <b id="drift-dist">0 m</b></span>
+        </div>
+
+        <!-- 3D THREE.JS CANVAS VIEWPORT -->
+        <div class="road-scene" id="road-scene">
+          <div id="scene-root"></div>
+          <div class="skyline" id="race-skyline">LONDON • STREET CIRCUIT</div>
+          <div class="race-message" id="race-message">READY? TAP ACCELERATE OR PRESS W TO START</div>
+          <div class="countdown-overlay" id="countdown">
+            <div class="countdown-stage" id="countdown-stage">STAGE 1 • GET READY</div>
+            <span id="countdown-number" class="pop-anim">3</span>
+            <div class="countdown-pips">
+              <span class="pip active" id="pip-3"></span>
+              <span class="pip" id="pip-2"></span>
+              <span class="pip" id="pip-1"></span>
+            </div>
+          </div>
+          <div class="race-toast" id="race-toast"></div>
+          <div class="minimap-container">
+            <canvas id="minimap-canvas" width="130" height="130"></canvas>
+          </div>
+        </div>
+
+        <!-- ON-SCREEN TOUCH CONTROLS (MOBILE & DESKTOP) -->
+        <div class="race-controls">
+          <div class="steer-controls-cluster">
+            <button class="control-btn steer-btn" id="steer-left" aria-label="Steer Left">◀ LEFT</button>
+            <button class="control-btn steer-btn" id="steer-right" aria-label="Steer Right">RIGHT ▶</button>
+          </div>
+          <div class="pedal-controls-cluster">
+            <button class="control-btn brake-btn" id="brake">BRAKE</button>
+            <button class="control-btn nitro-btn" id="nitro">NITRO ⚡</button>
+            <button class="control-btn accelerate-btn" id="accelerate">ACCELERATE ⏩</button>
+          </div>
+        </div>
+
+        <p class="race-help">Controls: Accelerate to build speed, Steer Left / Right, Brake to drift through tight bends, and tap Nitro ⚡ for a boost! Keyboard: W/Up = Gas, S/Down = Brake, A/Left = Steer Left, D/Right = Steer Right, Space = Drift, Shift = Nitro.</p>
+      </section>
+
+      <!-- SCREEN 6: RESULTS -->
+      <section class="screen" id="results">
+        <div class="results-card panel">
+          <div class="trophy">🏆</div>
+          <p class="eyebrow">RACE COMPLETE</p>
+          <h1 id="result-title">FINISH!</h1>
+          <p class="result-rank" id="result-rank">1ST PLACE</p>
+          <div class="result-stats">
+            <div><small>TIME</small><b id="result-time">00:51:72</b></div>
+            <div><small>COINS</small><b id="result-coins">+120 🪙</b></div>
+            <div><small>STARS</small><b id="result-stars">★★★</b></div>
+          </div>
+          <button class="primary-btn" id="next-level-btn">NEXT LEVEL　➜</button>
+          <button class="outline-btn" id="again">RACE AGAIN</button>
+          <button class="ghost-btn" data-screen="garage">BACK TO GARAGE</button>
+        </div>
+      </section>
+
+      <!-- SCREEN 7: WORKSHOP (UPGRADES) -->
+      <section class="screen" id="upgrade">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">WORKSHOP</p>
+            <h1>Upgrade your <em>GT 86</em></h1>
+          </div>
+          <button class="ghost-btn" data-screen="garage">← Garage</button>
+        </div>
+        <div class="panel upgrade-panel">
+          <h2>Performance upgrades</h2>
+          <p>Choose an upgrade to preview your next build.</p>
+          <div class="upgrade-row">
+            <span>Engine tune</span>
+            <b>+8 speed</b>
+            <button class="small-btn" data-upgrade="Engine tune">UPGRADE · 100 🪙</button>
+          </div>
+          <div class="upgrade-row">
+            <span>Nitro kit</span>
+            <b>+2 seconds</b>
+            <button class="small-btn" data-upgrade="Nitro kit">UPGRADE · 120 🪙</button>
+          </div>
+          <div class="upgrade-row">
+            <span>Handling tyres</span>
+            <b>+6 handling</b>
+            <button class="small-btn" data-upgrade="Handling tyres">UPGRADE · 90 🪙</button>
+          </div>
+          <div class="upgrade-row">
+            <span>Aero bodykit</span>
+            <b>+5 accel</b>
+            <button class="small-btn" data-upgrade="Aero bodykit">UPGRADE · 110 🪙</button>
+          </div>
+          <p id="upgrade-message" class="upgrade-message">Your current rating is 240.0.</p>
+        </div>
+      </section>
+
+      <!-- SCREEN 8: REWARDS -->
+      <section class="screen" id="rewards">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">PLAYER CENTER</p>
+            <h1>Daily <em>rewards</em></h1>
+          </div>
+          <button class="ghost-btn" data-screen="garage">← Garage</button>
+        </div>
+        <div class="panel rewards-panel">
+          <div class="gift">🎁</div>
+          <h2>Daily login reward</h2>
+          <p>Collect your coins and get ready for the next race.</p>
+          <button class="primary-btn" id="claim">CLAIM 50 COINS</button>
+          <p id="reward-message"></p>
+        </div>
+      </section>
+
+      <!-- SCREEN 9: GLOBAL LEADERBOARD -->
+      <section class="screen" id="leaderboard">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">GLOBAL CIRCUIT</p>
+            <h1>Live <em>Leaderboard</em></h1>
+          </div>
+          <button class="ghost-btn" data-screen="garage">← Garage</button>
+        </div>
+        <div class="panel leaderboard-panel">
+          <div class="lb-header-row">
+            <h2>Worldwide Top Records</h2>
+            <span class="live-indicator">● LIVE NODE.JS API</span>
+          </div>
+          <div class="lb-table-wrap">
+            <table class="lb-table">
+              <thead>
+                <tr>
+                  <th>RANK</th>
+                  <th>DRIVER</th>
+                  <th>VEHICLE</th>
+                  <th>TRACK</th>
+                  <th>BEST TIME</th>
+                  <th>DRIFT</th>
+                </tr>
+              </thead>
+              <tbody id="lb-table-body">
+                <tr><td colspan="6" style="text-align:center;padding:24px;color:var(--muted)">Loading records from Node.js backend...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- FOOTER -->
+    <footer>
+      NEON GT RACING <span>FRONT-END GAME UI · POWERED BY THREE.JS 3D ENGINE & NODE.JS BACKEND</span>
+    </footer>
+  </div>
+
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,21 @@
+{
+  "name": "apex-rush",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "server": "node server/server.js",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "cors": "^2.8.6",
+    "express": "^5.3.0",
+    "three": "^0.180.0"
+  },
+  "devDependencies": {
+    "qrcode": "^1.5.4",
+    "vite": "^7.1.7"
+  }
+}
