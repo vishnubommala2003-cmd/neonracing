@@ -12,6 +12,38 @@
   <link rel="stylesheet" href="./src/style.css">
 </head>
 <body>
+  <!-- GAME STARTUP SPLASH / FLASH SCREEN (BASED ON GT NEON RACING LOGO) -->
+  <div id="splash-screen" class="splash-screen">
+    <div class="splash-backdrop"></div>
+    <div class="splash-speed-lines"></div>
+    <div class="splash-center">
+      <div class="splash-logo-card">
+        <!-- Glowing GT Cyber Emblem -->
+        <div class="splash-emblem-wrap">
+          <div class="splash-emblem-ring"></div>
+          <div class="splash-brand-mark">GT</div>
+        </div>
+        <!-- NEON RACING Title -->
+        <div class="splash-title-wrap">
+          <h1 class="splash-title">NEON <span>RACING</span></h1>
+          <div class="splash-subtitle">3D HIGH-OCTANE STREET RACING • TOYOTA GT 86</div>
+        </div>
+      </div>
+
+      <!-- Cyber Loading Bar & Start Action -->
+      <div class="splash-action-zone">
+        <div class="splash-bar-wrap">
+          <div class="splash-bar-fill" id="splash-bar-fill"></div>
+        </div>
+        <div class="splash-status-text" id="splash-status">INITIALIZING 3D ENGINE...</div>
+        <button class="splash-enter-btn" id="splash-enter-btn">
+          <span>START RACING　🏁</span>
+        </button>
+      </div>
+    </div>
+    <div class="splash-footer-note">TAP OR CLICK ANYWHERE TO ENTER RACING</div>
+  </div>
+
   <div class="app-shell">
     <!-- TOP NAVIGATION BAR -->
     <header class="topbar">

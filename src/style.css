@@ -524,13 +524,29 @@ main {
   text-shadow: 0 0 12px var(--cyan);
 }
 
+.challenge.panel {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 12px 14px;
+  overflow: hidden;
+  height: 100%;
+  min-height: 0;
+}
+
 .challenge h2 {
-  font: 800 24px 'Barlow Condensed';
-  margin: 0 0 12px;
+  font: 800 20px 'Barlow Condensed';
+  margin: 0 0 4px;
+  letter-spacing: 1px;
+  line-height: 1.1;
+  flex-shrink: 0;
 }
 
 .event-art {
-  height: 160px;
+  flex: 1 1 auto;
+  min-height: 55px;
+  max-height: 105px;
+  height: auto;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -540,6 +556,7 @@ main {
   border: 1px solid #3c9ac7;
   position: relative;
   overflow: hidden;
+  margin: 3px 0;
 }
 
 .event-art:before {
@@ -559,30 +576,63 @@ main {
 }
 
 .event-art span {
-  font-size: 35px;
+  font-size: 26px;
+  line-height: 1;
 }
 
 .event-art b {
-  font: 900 28px 'Barlow Condensed';
-  letter-spacing: 4px;
+  font: 900 22px 'Barlow Condensed';
+  letter-spacing: 3px;
+  line-height: 1.1;
+  margin: 2px 0;
 }
 
 .event-art small {
-  letter-spacing: 3px;
+  letter-spacing: 2px;
   color: var(--cyan);
+  font-size: 11px;
 }
 
 .best-time {
   color: var(--gold);
   font-weight: 700;
-  font-size: 14px;
-  margin: 14px 0 8px;
+  font-size: 13px;
+  margin: 4px 0 2px;
+  flex-shrink: 0;
 }
 
 .best-time strong {
   float: right;
-  font-size: 18px;
+  font-size: 16px;
   font-family: 'Barlow Condensed';
+}
+
+#enter-event-btn {
+  flex-shrink: 0;
+  min-height: 42px;
+  height: 42px;
+  margin-top: 4px;
+  padding: 8px 14px;
+  font: 800 16px 'Barlow Condensed';
+  letter-spacing: 1.5px;
+  color: #fff;
+  background: linear-gradient(110deg, #087bd6, #00d4ff);
+  border: 1px solid #7be9ff;
+  box-shadow: 0 0 20px rgba(0, 212, 255, 0.45);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-transform: uppercase;
+  border-radius: 3px;
+  width: 100%;
+  transition: all 0.2s ease;
+}
+
+#enter-event-btn:hover {
+  background: linear-gradient(110deg, #1091f0, #38e1ff);
+  box-shadow: 0 0 28px rgba(0, 212, 255, 0.75);
+  transform: translateY(-1px);
 }
 
 /* BOTTOM MODE GRID (5 CARDS) */
@@ -1038,20 +1088,77 @@ main {
   justify-content: space-between;
   height: 100%;
   min-height: 0;
-  padding: 14px 18px;
+  padding: 12px 16px;
   overflow: hidden;
 }
 
-.select-stats h2,
+.select-stats h2 {
+  font: 800 20px 'Barlow Condensed';
+  margin: 0 0 4px;
+  letter-spacing: 1px;
+  line-height: 1.1;
+  flex-shrink: 0;
+}
+
+.select-stats .stat {
+  margin: 4px 0;
+  flex-shrink: 0;
+}
+
+.select-stats .stat > div:first-child {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  margin-bottom: 2px;
+}
+
+.select-stats .meter {
+  height: 6px;
+}
+
+#start-race {
+  flex-shrink: 0;
+  min-height: 48px;
+  height: 48px;
+  margin-top: 6px;
+  padding: 10px 16px;
+  font: 900 18px 'Barlow Condensed';
+  letter-spacing: 2px;
+  color: #031120;
+  background: linear-gradient(110deg, #ffc928, #ffaa00);
+  border: 2px solid #fff2a3;
+  box-shadow: 0 0 24px rgba(255, 201, 40, 0.7), inset 0 0 10px rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-transform: uppercase;
+  border-radius: 4px;
+  width: 100%;
+  animation: startPulseGlow 1.8s infinite alternate;
+  transition: all 0.2s ease;
+}
+
+@keyframes startPulseGlow {
+  0% {
+    box-shadow: 0 0 14px rgba(255, 201, 40, 0.5), inset 0 0 6px rgba(255, 255, 255, 0.4);
+  }
+  100% {
+    box-shadow: 0 0 30px rgba(255, 201, 40, 0.95), 0 0 12px #fff, inset 0 0 12px rgba(255, 255, 255, 0.8);
+    transform: scale(1.01);
+  }
+}
+
+#start-race:hover {
+  filter: brightness(1.2);
+  box-shadow: 0 0 36px rgba(255, 201, 40, 1), 0 0 16px #fff;
+}
+
 .upgrade-panel h2,
 .rewards-panel h2 {
   font: 800 22px 'Barlow Condensed';
   margin-top: 0;
   margin-bottom: 4px;
-}
-
-.full {
-  margin-top: auto;
 }
 
 /* SCREEN 5: THE 3D RACE */
@@ -2000,4 +2107,252 @@ footer {
   .results-card h1 {
     font-size: 26px;
   }
+}
+
+
+/* ============================================================
+   STARTUP SPLASH / FLASH SCREEN (BASED ON GT NEON RACING LOGO)
+   ============================================================ */
+.splash-screen {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100dvh;
+  z-index: 10000;
+  background: radial-gradient(ellipse at 50% 35%, #0f3d6c 0%, #06192e 55%, #01060e 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  user-select: none;
+  touch-action: manipulation;
+  cursor: pointer;
+  transition: opacity 0.5s cubic-bezier(0.2, 0.8, 0.2, 1), transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.splash-screen.splash-fade-out {
+  opacity: 0;
+  transform: scale(1.06);
+  pointer-events: none;
+}
+
+.splash-backdrop {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 50%, rgba(19, 191, 255, 0.15) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+.splash-speed-lines {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    90deg,
+    transparent 0,
+    transparent 60px,
+    rgba(19, 191, 255, 0.04) 61px,
+    transparent 62px
+  );
+  animation: speedLinesMotion 12s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes speedLinesMotion {
+  from { background-position: 0 0; }
+  to { background-position: 600px 0; }
+}
+
+.splash-center {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 20px;
+  max-width: 620px;
+  width: 90%;
+}
+
+.splash-logo-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  animation: splashPopIn 0.8s cubic-bezier(0.18, 0.89, 0.32, 1.28) forwards;
+}
+
+@keyframes splashPopIn {
+  0% { transform: scale(0.7); opacity: 0; filter: blur(10px); }
+  100% { transform: scale(1); opacity: 1; filter: blur(0); }
+}
+
+.splash-emblem-wrap {
+  position: relative;
+  width: 96px;
+  height: 96px;
+  display: grid;
+  place-items: center;
+}
+
+.splash-emblem-ring {
+  position: absolute;
+  inset: -10px;
+  border-radius: 50%;
+  border: 2px dashed rgba(0, 212, 255, 0.5);
+  animation: ringSpin 8s linear infinite;
+  box-shadow: 0 0 25px rgba(0, 212, 255, 0.4);
+}
+
+@keyframes ringSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.splash-brand-mark {
+  width: 82px;
+  height: 82px;
+  background: linear-gradient(135deg, #20caff, #1250a4);
+  border: 2px solid #8beaff;
+  transform: skew(-8deg);
+  display: grid;
+  place-items: center;
+  font-size: 44px;
+  font-weight: 900;
+  font-family: 'Barlow Condensed', sans-serif;
+  color: #fff;
+  letter-spacing: 2px;
+  box-shadow: 0 0 35px #00d4ff, inset 0 0 16px rgba(255, 255, 255, 0.8);
+  animation: emblemGlowPulse 2s ease-in-out infinite alternate;
+}
+
+@keyframes emblemGlowPulse {
+  0% { box-shadow: 0 0 25px #00d4ff, inset 0 0 12px rgba(255, 255, 255, 0.6); }
+  100% { box-shadow: 0 0 45px #38e1ff, 0 0 70px rgba(0, 212, 255, 0.6), inset 0 0 20px #fff; }
+}
+
+.splash-title-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.splash-title {
+  font: 900 52px/1 'Barlow Condensed', sans-serif;
+  letter-spacing: 6px;
+  margin: 0;
+  color: #fff;
+  text-shadow: 0 0 25px rgba(0, 212, 255, 0.8), 0 4px 15px #000;
+}
+
+.splash-title span {
+  color: #7ce8ff;
+  text-shadow: 0 0 30px #00d4ff, 0 0 50px rgba(0, 212, 255, 0.6);
+}
+
+.splash-subtitle {
+  font: 700 13px/1 'Barlow Condensed', sans-serif;
+  letter-spacing: 3px;
+  color: #ffc928;
+  text-transform: uppercase;
+  text-shadow: 0 0 12px rgba(255, 201, 40, 0.6);
+  margin-top: 4px;
+}
+
+.splash-action-zone {
+  width: 100%;
+  max-width: 380px;
+  margin-top: 36px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.splash-bar-wrap {
+  width: 100%;
+  height: 8px;
+  background: rgba(3, 16, 33, 0.85);
+  border: 1px solid #1a85b7;
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow: inset 0 0 8px #000;
+}
+
+.splash-bar-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #087de5, #00d4ff, #ffc928);
+  box-shadow: 0 0 16px #00d4ff;
+  transition: width 0.25s ease-out;
+}
+
+.splash-status-text {
+  font: 700 12px 'Rajdhani', sans-serif;
+  letter-spacing: 2px;
+  color: #9db8d1;
+  text-transform: uppercase;
+}
+
+.splash-enter-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: 14px 28px;
+  font: 900 20px 'Barlow Condensed', sans-serif;
+  letter-spacing: 2px;
+  color: #031120;
+  background: linear-gradient(110deg, #ffc928, #ffaa00);
+  border: 2px solid #fff2a3;
+  border-radius: 4px;
+  box-shadow: 0 0 30px rgba(255, 201, 40, 0.7), inset 0 0 10px rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  text-transform: uppercase;
+  transition: all 0.2s ease;
+  animation: splashBtnPulse 1.6s infinite alternate;
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+.splash-enter-btn.ready {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@keyframes splashBtnPulse {
+  0% { box-shadow: 0 0 20px rgba(255, 201, 40, 0.5); }
+  100% { box-shadow: 0 0 40px rgba(255, 201, 40, 0.95), 0 0 15px #fff; transform: scale(1.03); }
+}
+
+.splash-enter-btn:hover {
+  filter: brightness(1.2);
+  transform: scale(1.05);
+}
+
+.splash-footer-note {
+  position: absolute;
+  bottom: 22px;
+  font: 700 12px 'Barlow Condensed', sans-serif;
+  letter-spacing: 2px;
+  color: rgba(157, 184, 209, 0.7);
+  text-transform: uppercase;
+  animation: blinkNote 2s infinite ease-in-out;
+}
+
+@keyframes blinkNote {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
+@media (max-width: 650px) {
+  .splash-title { font-size: 38px; letter-spacing: 4px; }
+  .splash-subtitle { font-size: 11px; letter-spacing: 2px; }
+  .splash-brand-mark { width: 68px; height: 68px; font-size: 36px; }
+  .splash-emblem-wrap { width: 80px; height: 80px; }
+  .splash-action-zone { margin-top: 24px; max-width: 300px; }
+  .splash-enter-btn { padding: 12px 20px; font-size: 17px; }
 }

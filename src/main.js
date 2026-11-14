@@ -611,7 +611,6 @@ $('#btn-exit-race')?.addEventListener('click', (e) => {
   audio.setInRace(false);
   game.clearRaceVehicles();
   showScreen('garage');
-  updateTrackUi(audio.getCurrentTrack());
 });
 
 // Music Song Player Controls & UI Synchronization
@@ -944,6 +943,56 @@ async function init() {
 
   showScreen('garage');
   updateTrackUi(audio.getCurrentTrack());
+  initSplashScreen();
+}
+
+// Game Startup Splash Screen Logic (GT NEON RACING logo)
+function initSplashScreen() {
+  const splash = $('#splash-screen');
+  const barFill = $('#splash-bar-fill');
+  const statusText = $('#splash-status');
+  const enterBtn = $('#splash-enter-btn');
+
+  if (!splash) return;
+
+  const stages = [
+    { p: 25, msg: 'INITIALIZING 3D ENGINE...' },
+    { p: 55, msg: 'TUNING TOYOTA GT 86 BOXER...' },
+    { p: 85, msg: 'LOADING HIGH-OCTANE TRACKS...' },
+    { p: 100, msg: 'READY TO RACE!' },
+  ];
+
+  let stageIdx = 0;
+  const interval = setInterval(() => {
+    if (stageIdx < stages.length) {
+      const s = stages[stageIdx];
+      if (barFill) barFill.style.width = `${s.p}%`;
+      if (statusText) statusText.textContent = s.msg;
+      stageIdx++;
+    } else {
+      clearInterval(interval);
+      if (enterBtn) enterBtn.classList.add('ready');
+      if (statusText) statusText.textContent = 'PRESS ANYWHERE TO ENTER RACING';
+    }
+  }, 220);
+
+  const dismissSplash = (e) => {
+    if (splash.classList.contains('splash-fade-out')) return;
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+
+    unlockAudio();
+
+    splash.classList.add('splash-fade-out');
+    setTimeout(() => {
+      splash.style.display = 'none';
+    }, 550);
+  };
+
+  enterBtn?.addEventListener('click', dismissSplash);
+  splash.addEventListener('click', dismissSplash);
 }
 
 // Unlock AudioContext on first user interaction (touch, click, or key)
