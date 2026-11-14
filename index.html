@@ -12,6 +12,25 @@
   <link rel="stylesheet" href="./src/style.css">
 </head>
 <body>
+  <!-- MOBILE LANDSCAPE ROTATE PROMPT OVERLAY -->
+  <div id="rotate-overlay" class="rotate-overlay" aria-hidden="true">
+    <div class="rotate-backdrop"></div>
+    <div class="rotate-box">
+      <div class="rotate-device-animation">
+        <div class="rotate-phone-icon">
+          <div class="rotate-phone-notch"></div>
+          <div class="rotate-phone-screen">
+            <span class="phone-screen-logo">GT</span>
+          </div>
+        </div>
+        <div class="rotate-arrow-curve">⤾</div>
+      </div>
+      <h2>ROTATE YOUR DEVICE</h2>
+      <p>Please turn your mobile to <b>LANDSCAPE</b> mode for full-screen racing controls and 3D arcade view.</p>
+      <button class="primary-btn" id="btn-rotate-enter">PLAY IN FULLSCREEN 📱</button>
+    </div>
+  </div>
+
   <!-- GAME STARTUP SPLASH / FLASH SCREEN (BASED ON GT NEON RACING LOGO) -->
   <div id="splash-screen" class="splash-screen">
     <div class="splash-backdrop"></div>

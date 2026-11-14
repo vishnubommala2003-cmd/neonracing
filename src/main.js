@@ -659,8 +659,31 @@ $('#music-pill')?.addEventListener('click', (e) => {
   updateTrackUi(t);
 });
 
+// Mobile Device Orientation & Landscape Management
+function checkOrientation() {
+  const isMobileOrTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || window.innerWidth <= 900;
+  const isPortrait = window.innerHeight > window.innerWidth;
+  const rotateOverlay = $('#rotate-overlay');
+  if (rotateOverlay) {
+    if (isMobileOrTouch && isPortrait) {
+      rotateOverlay.classList.add('active');
+    } else {
+      rotateOverlay.classList.remove('active');
+    }
+  }
+}
+
+$('#btn-rotate-enter')?.addEventListener('click', (e) => {
+  e.preventDefault();
+  requestFullscreenSafe();
+  if (screen.orientation && screen.orientation.lock) {
+    screen.orientation.lock('landscape').catch(() => {});
+  }
+});
+
 ['fullscreenchange', 'webkitfullscreenchange', 'orientationchange', 'resize'].forEach((ev) => {
   window.addEventListener(ev, () => {
+    checkOrientation();
     requestAnimationFrame(() => {
       game.resize();
     });
@@ -944,6 +967,7 @@ async function init() {
   showScreen('garage');
   updateTrackUi(audio.getCurrentTrack());
   initSplashScreen();
+  checkOrientation();
 }
 
 // Game Startup Splash Screen Logic (GT NEON RACING logo)

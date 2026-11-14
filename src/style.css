@@ -2356,3 +2356,184 @@ footer {
   .splash-action-zone { margin-top: 24px; max-width: 300px; }
   .splash-enter-btn { padding: 12px 20px; font-size: 17px; }
 }
+
+
+/* ============================================================
+   MOBILE LANDSCAPE ROTATE PROMPT OVERLAY
+   ============================================================ */
+.rotate-overlay {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100dvh;
+  z-index: 99999;
+  background: radial-gradient(ellipse at 50% 40%, #0d385f 0%, #041426 65%, #01060e 100%);
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  user-select: none;
+  touch-action: manipulation;
+  animation: rotateFadeIn 0.3s ease-out;
+}
+
+.rotate-overlay.active {
+  display: flex !important;
+}
+
+/* Automatic display when mobile device is held in portrait mode */
+@media screen and (orientation: portrait) and (max-width: 900px) {
+  .rotate-overlay {
+    display: flex !important;
+  }
+}
+
+/* Never show when device is in landscape mode */
+@media screen and (orientation: landscape) {
+  .rotate-overlay {
+    display: none !important;
+  }
+}
+
+@keyframes rotateFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.rotate-backdrop {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 50%, rgba(19, 191, 255, 0.12) 0%, transparent 65%);
+  pointer-events: none;
+}
+
+.rotate-box {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 24px;
+  max-width: 340px;
+  width: 90%;
+  background: rgba(4, 18, 36, 0.92);
+  border: 1px solid #1fa4dd;
+  border-radius: 8px;
+  box-shadow: 0 0 35px rgba(0, 0, 0, 0.8), 0 0 25px rgba(0, 212, 255, 0.25);
+}
+
+.rotate-device-animation {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  display: grid;
+  place-items: center;
+  margin-bottom: 12px;
+}
+
+.rotate-phone-icon {
+  width: 48px;
+  height: 84px;
+  border: 3px solid #7ce8ff;
+  border-radius: 9px;
+  background: #020c18;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 20px rgba(0, 212, 255, 0.6), inset 0 0 10px rgba(0, 212, 255, 0.3);
+  animation: rotatePhoneMotion 2.4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+@keyframes rotatePhoneMotion {
+  0%, 25% {
+    transform: rotate(0deg);
+  }
+  60%, 85% {
+    transform: rotate(-90deg);
+  }
+  100% {
+    transform: rotate(0deg);
+  }
+}
+
+.rotate-phone-notch {
+  width: 16px;
+  height: 3px;
+  background: #1fa4dd;
+  border-radius: 2px;
+  position: absolute;
+  top: 4px;
+}
+
+.rotate-phone-screen {
+  width: 38px;
+  height: 64px;
+  background: linear-gradient(135deg, #092c4f, #041224);
+  border-radius: 4px;
+  display: grid;
+  place-items: center;
+}
+
+.phone-screen-logo {
+  font: 900 16px 'Barlow Condensed', sans-serif;
+  color: #ffc928;
+  text-shadow: 0 0 8px #ffc928;
+}
+
+.rotate-arrow-curve {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  font-size: 26px;
+  color: #ffc928;
+  text-shadow: 0 0 12px #ffc928;
+  animation: pulseArrow 1.2s ease-in-out infinite alternate;
+}
+
+@keyframes pulseArrow {
+  0% { transform: scale(0.9) rotate(0deg); opacity: 0.7; }
+  100% { transform: scale(1.2) rotate(-15deg); opacity: 1; }
+}
+
+.rotate-box h2 {
+  font: 900 26px 'Barlow Condensed', sans-serif;
+  letter-spacing: 2px;
+  color: #fff;
+  margin: 6px 0;
+  text-shadow: 0 0 14px rgba(0, 212, 255, 0.8);
+}
+
+.rotate-box p {
+  font: 600 14px 'Rajdhani', sans-serif;
+  color: #9db8d1;
+  line-height: 1.4;
+  margin: 0 0 16px;
+}
+
+.rotate-box p b {
+  color: #ffc928;
+  letter-spacing: 1px;
+}
+
+#btn-rotate-enter {
+  width: 100%;
+  padding: 12px;
+  font: 800 16px 'Barlow Condensed', sans-serif;
+  letter-spacing: 1.5px;
+  color: #031120;
+  background: linear-gradient(110deg, #ffc928, #ffaa00);
+  border: 1px solid #fff;
+  border-radius: 4px;
+  box-shadow: 0 0 18px rgba(255, 201, 40, 0.6);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+#btn-rotate-enter:hover {
+  filter: brightness(1.15);
+  transform: translateY(-1px);
+}
