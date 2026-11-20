@@ -168,11 +168,22 @@ function createCarShell(stations, material, bottomY) {
 function disposeObject(object) {
   const geometries = new Set();
   const materials = new Set();
+  const textures = new Set();
   object.traverse((part) => {
     if (part.geometry) geometries.add(part.geometry);
-    if (Array.isArray(part.material)) part.material.forEach((mat) => materials.add(mat));
-    else if (part.material) materials.add(part.material);
+    if (Array.isArray(part.material)) {
+      part.material.forEach((mat) => {
+        materials.add(mat);
+        if (mat.map) textures.add(mat.map);
+        if (mat.emissiveMap) textures.add(mat.emissiveMap);
+      });
+    } else if (part.material) {
+      materials.add(part.material);
+      if (part.material.map) textures.add(part.material.map);
+      if (part.material.emissiveMap) textures.add(part.material.emissiveMap);
+    }
   });
+  textures.forEach((t) => t.dispose());
   geometries.forEach((g) => g.dispose());
   materials.forEach((m) => m.dispose());
 }
@@ -638,7 +649,800 @@ export class RacingGame {
     this.trackObjects.add(finishLine);
   }
 
+  _createWindowCanvas(theme, isNight) {
+    const canvas = document.createElement('canvas');
+    canvas.width = 512;
+    canvas.height = 512;
+    const ctx = canvas.getContext('2d');
+
+    if (theme === 'london') {
+      // Classic London Georgian / Victorian Red Brick Facade with Sash Windows
+      ctx.fillStyle = '#683428';
+      ctx.fillRect(0, 0, 512, 512);
+
+      // Brick mortar lines
+      ctx.fillStyle = 'rgba(190, 170, 155, 0.4)';
+      for (let y = 0; y < 512; y += 8) {
+        ctx.fillRect(0, y, 512, 1);
+      }
+      for (let y = 0; y < 512; y += 8) {
+        const offset = (y % 16 === 0) ? 0 : 9;
+        for (let x = offset; x < 512; x += 18) {
+          ctx.fillRect(x, y, 1, 8);
+        }
+      }
+
+      // Limestone horizontal floor bandings
+      ctx.fillStyle = '#d4ccbd';
+      ctx.fillRect(0, 124, 512, 8);
+      ctx.fillRect(0, 252, 512, 8);
+      ctx.fillRect(0, 380, 512, 8);
+
+      // Georgian 6-pane sash windows with crisp white stone surrounds
+      const cols = 6;
+      const rows = 4;
+      const colStep = 512 / cols;
+      const rowStep = 512 / rows;
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          const wx = c * colStep + 16;
+          const wy = r * rowStep + 20;
+          const ww = colStep - 32;
+          const wh = rowStep - 46;
+
+          ctx.fillStyle = '#ede9e1';
+          ctx.fillRect(wx - 3, wy - 3, ww + 6, wh + 6);
+
+          const isLit = (c + r * 3) % 2 === 0;
+          ctx.fillStyle = isLit ? '#ffecc2' : '#222b35';
+          ctx.fillRect(wx, wy, ww, wh);
+
+          // White sash window mullions (2 vertical x 3 horizontal)
+          ctx.fillStyle = '#ede9e1';
+          ctx.fillRect(wx + ww / 2 - 1, wy, 2, wh);
+          ctx.fillRect(wx, wy + wh / 3 - 1, ww, 2);
+          ctx.fillRect(wx, wy + (wh * 2) / 3 - 1, ww, 2);
+        }
+      }
+    } else if (theme === 'coastal') {
+      // Coastal Riviera White Stucco & Aqua Glass Balconies
+      ctx.fillStyle = '#eef3f6';
+      ctx.fillRect(0, 0, 512, 512);
+
+      ctx.fillStyle = '#d5dfe5';
+      for (let y = 0; y < 512; y += 64) {
+        ctx.fillRect(0, y, 512, 2);
+      }
+
+      const cols = 5;
+      const rows = 4;
+      const colStep = 512 / cols;
+      const rowStep = 512 / rows;
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          const wx = c * colStep + 12;
+          const wy = r * rowStep + 14;
+          const ww = colStep - 24;
+          const wh = rowStep - 36;
+
+          ctx.fillStyle = '#2d3748';
+          ctx.fillRect(wx - 2, wy - 2, ww + 4, wh + 4);
+
+          ctx.fillStyle = (c + r) % 3 === 0 ? '#b2e8f7' : '#5796b3';
+          ctx.fillRect(wx, wy, ww, wh);
+
+          ctx.fillStyle = 'rgba(78, 178, 209, 0.7)';
+          ctx.fillRect(wx, wy + wh - 12, ww, 12);
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(wx, wy + wh - 13, ww, 2);
+        }
+      }
+    } else if (theme === 'desert') {
+      // Desert Terracotta & Bronze Glass Facade
+      ctx.fillStyle = '#6e3d2a';
+      ctx.fillRect(0, 0, 512, 512);
+
+      ctx.fillStyle = '#4e2a1c';
+      for (let y = 0; y < 512; y += 85) {
+        ctx.fillRect(0, y, 512, 6);
+      }
+
+      const cols = 5;
+      const rows = 4;
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          const wx = c * 102 + 16;
+          const wy = r * 128 + 24;
+          ctx.fillStyle = '#26150f';
+          ctx.fillRect(wx - 2, wy - 2, 74, 84);
+          ctx.fillStyle = (c + r * 2) % 2 === 0 ? '#ffb973' : '#45281e';
+          ctx.fillRect(wx, wy, 70, 80);
+          ctx.fillStyle = 'rgba(255, 200, 120, 0.3)';
+          ctx.fillRect(wx, wy + 26, 70, 2);
+        }
+      }
+    } else if (theme === 'alpine') {
+      // Alpine Timber Chalet & Warm Glowing Windows
+      ctx.fillStyle = '#322822';
+      ctx.fillRect(0, 0, 512, 512);
+
+      ctx.fillStyle = '#241b16';
+      for (let y = 0; y < 512; y += 16) {
+        ctx.fillRect(0, y, 512, 2);
+      }
+      ctx.fillStyle = '#1c1511';
+      for (let x = 0; x < 512; x += 128) {
+        ctx.fillRect(x, 0, 8, 512);
+      }
+
+      const cols = 4;
+      const rows = 4;
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          const wx = c * 128 + 26;
+          const wy = r * 128 + 28;
+          ctx.fillStyle = '#18120e';
+          ctx.fillRect(wx - 3, wy - 3, 82, 76);
+          ctx.fillStyle = '#ffb74d';
+          ctx.fillRect(wx, wy, 76, 70);
+          ctx.fillStyle = '#2d2018';
+          ctx.fillRect(wx + 37, wy, 3, 70);
+          ctx.fillRect(wx, wy + 34, 76, 3);
+        }
+      }
+    } else {
+      // Modern City / Tokyo / Cyberpunk High-Rise Glass Curtain Facade
+      ctx.fillStyle = '#11151f';
+      ctx.fillRect(0, 0, 512, 512);
+
+      ctx.fillStyle = '#1a202e';
+      for (let y = 0; y < 512; y += 32) {
+        ctx.fillRect(0, y, 512, 3);
+      }
+      ctx.fillStyle = '#0d111a';
+      for (let x = 0; x < 512; x += 32) {
+        ctx.fillRect(x, 0, 3, 512);
+      }
+
+      const cols = 16;
+      const rows = 16;
+      const litColors = ['#fff3cc', '#7ce0ff', '#ffffff', '#ffd06b', '#62ffc8'];
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          const wx = c * 32 + 5;
+          const wy = r * 32 + 5;
+          const ww = 22;
+          const wh = 22;
+
+          const rand = ((c * 37 + r * 73) % 100);
+          if (rand < 42) {
+            const colorIdx = (c + r * 2) % litColors.length;
+            ctx.fillStyle = litColors[colorIdx];
+            ctx.fillRect(wx, wy, ww, wh);
+            ctx.fillStyle = 'rgba(0,0,0,0.22)';
+            ctx.fillRect(wx, wy, ww, 4);
+          } else {
+            ctx.fillStyle = '#171d28';
+            ctx.fillRect(wx, wy, ww, wh);
+          }
+        }
+      }
+    }
+
+    const tex = new THREE.CanvasTexture(canvas);
+    tex.wrapS = THREE.RepeatWrapping;
+    tex.wrapT = THREE.RepeatWrapping;
+    tex.colorSpace = THREE.SRGBColorSpace;
+    return tex;
+  }
+
+  _createStorefrontCanvas(theme, trackKey) {
+    const canvas = document.createElement('canvas');
+    canvas.width = 512;
+    canvas.height = 256;
+    const ctx = canvas.getContext('2d');
+
+    ctx.fillStyle = '#141822';
+    ctx.fillRect(0, 0, 512, 256);
+
+    let shopTitles = ['APEX MOTORS', 'CYBER CAFE 24H', 'TURBO RACING'];
+    if (trackKey === 'tokyo') {
+      shopTitles = ['東京 RACING', 'RAMEN 24H 渋谷', 'JDM TUNING LAB'];
+    } else if (trackKey === 'london') {
+      shopTitles = ['THE CROWN PUB', 'UNDERGROUND METRO', 'ROYAL MOTORS'];
+    } else if (trackKey === 'coastal') {
+      shopTitles = ['OCEAN DRIVE CAFE', 'GRAND AZUR CLUB', 'RIVIERA YACHTS'];
+    } else if (trackKey === 'desert') {
+      shopTitles = ['REDLINE SPEED SHOP', 'CANYON MOTEL', 'DYNO RACING LAB'];
+    } else if (trackKey === 'alpine') {
+      shopTitles = ['ALPINE SKI LODGE', 'SUMMIT CHALET', 'ST. MORITZ BAR'];
+    } else if (trackKey === 'cyber') {
+      shopTitles = ['SYNTHWAVE BAR', 'CYBER MATRIX 24H', 'NEXUS MOTORS'];
+    }
+
+    const bayW = 244;
+    for (let b = 0; b < 2; b++) {
+      const bx = b * 256 + 6;
+      const title = shopTitles[b % shopTitles.length];
+
+      ctx.fillStyle = '#0c0f16';
+      ctx.fillRect(bx, 10, bayW, 236);
+
+      const signGlow = (b === 0) ? '#38f5c2' : (trackKey === 'tokyo' ? '#ff2a85' : '#ffb834');
+      ctx.fillStyle = '#151b26';
+      ctx.fillRect(bx + 8, 18, bayW - 16, 46);
+      ctx.strokeStyle = signGlow;
+      ctx.lineWidth = 2.5;
+      ctx.strokeRect(bx + 8, 18, bayW - 16, 46);
+
+      ctx.fillStyle = signGlow;
+      ctx.font = '900 17px "Arial Black", sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(title, bx + bayW / 2, 41);
+
+      const winW = (bayW - 24) / 2;
+      ctx.fillStyle = '#1c2432';
+      ctx.fillRect(bx + 8, 72, winW, 166);
+      ctx.fillStyle = 'rgba(255, 240, 200, 0.28)';
+      ctx.fillRect(bx + 12, 76, winW - 8, 158);
+
+      ctx.fillStyle = signGlow;
+      ctx.fillRect(bx + 20, 195, winW - 24, 6);
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+      ctx.font = 'bold 11px sans-serif';
+      ctx.fillText('OPEN 24/7', bx + 12 + (winW - 8) / 2, 92);
+
+      const dx = bx + 8 + winW + 8;
+      ctx.fillStyle = '#1a212d';
+      ctx.fillRect(dx, 72, winW, 166);
+      ctx.strokeStyle = '#384659';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(dx + 2, 74, winW - 4, 162);
+      ctx.fillStyle = '#c7d2e0';
+      ctx.fillRect(dx + 8, 140, 4, 28);
+    }
+
+    const tex = new THREE.CanvasTexture(canvas);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    return tex;
+  }
+
+  _createBillboardCanvas(trackKey, accentHex, secAccentHex) {
+    const canvas = document.createElement('canvas');
+    canvas.width = 512;
+    canvas.height = 256;
+    const ctx = canvas.getContext('2d');
+
+    ctx.fillStyle = '#0a0d14';
+    ctx.fillRect(0, 0, 512, 256);
+
+    const borderCol = '#' + (accentHex || 0x38f5c2).toString(16).padStart(6, '0');
+    const secCol = '#' + (secAccentHex || 0xff0077).toString(16).padStart(6, '0');
+
+    ctx.strokeStyle = borderCol;
+    ctx.lineWidth = 6;
+    ctx.strokeRect(8, 8, 496, 240);
+
+    ctx.fillStyle = secCol;
+    ctx.fillRect(4, 4, 28, 6);
+    ctx.fillRect(4, 4, 6, 28);
+    ctx.fillRect(512 - 32, 4, 28, 6);
+    ctx.fillRect(512 - 10, 4, 6, 28);
+    ctx.fillRect(4, 256 - 10, 28, 6);
+    ctx.fillRect(4, 256 - 32, 6, 28);
+    ctx.fillRect(512 - 32, 256 - 10, 28, 6);
+    ctx.fillRect(512 - 10, 256 - 32, 6, 28);
+
+    let title = 'NITRO OVERDRIVE';
+    let tag = 'UNLEASH PEAK VELOCITY';
+    if (trackKey === 'tokyo') {
+      title = 'TOKYO MIDNIGHT';
+      tag = 'SHIBUYA STREET RACING // APEX';
+    } else if (trackKey === 'london') {
+      title = 'LONDON GRAND PRIX';
+      tag = 'THE ULTIMATE CITY CIRCUIT';
+    } else if (trackKey === 'cyber') {
+      title = 'NEO MEGACITY';
+      tag = 'CYBERNETIC RACING LEAGUE';
+    } else if (trackKey === 'desert') {
+      title = 'REDLINE CANYON';
+      tag = 'MAXIMUM OCTANE // 200 MPH';
+    } else if (trackKey === 'coastal') {
+      title = 'COASTAL GRAND PRIX';
+      tag = 'PACIFIC SPEEDWAY // BLUE HOUR';
+    }
+
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.06)';
+    for (let x = 30; x < 500; x += 40) {
+      ctx.beginPath();
+      ctx.moveTo(x, 18);
+      ctx.lineTo(x + 24, 18);
+      ctx.lineTo(x - 12, 238);
+      ctx.lineTo(x - 36, 238);
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    ctx.fillStyle = borderCol;
+    ctx.font = '900 38px "Arial Black", Impact, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(title, 256, 105);
+
+    ctx.fillStyle = secCol;
+    ctx.font = 'bold 18px Arial, sans-serif';
+    ctx.fillText(tag, 256, 158);
+
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 12px monospace';
+    ctx.fillText('SPEED // DRIFT // NITRO // APEX RUSH', 256, 212);
+
+    const tex = new THREE.CanvasTexture(canvas);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    return tex;
+  }
+
+  _createTokyoSignCanvas() {
+    const canvas = document.createElement('canvas');
+    canvas.width = 128;
+    canvas.height = 512;
+    const ctx = canvas.getContext('2d');
+
+    ctx.fillStyle = '#080a12';
+    ctx.fillRect(0, 0, 128, 512);
+
+    ctx.strokeStyle = '#ff2a85';
+    ctx.lineWidth = 4;
+    ctx.strokeRect(6, 6, 116, 500);
+
+    ctx.font = '900 32px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+
+    const chars = ['東', '京', '超', '速', '競', '走'];
+    for (let i = 0; i < chars.length; i++) {
+      ctx.fillStyle = i % 2 === 0 ? '#ff2a85' : '#00f0ff';
+      ctx.fillText(chars[i], 64, 55 + i * 72);
+    }
+
+    const tex = new THREE.CanvasTexture(canvas);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    return tex;
+  }
+
+  _createSidewalkCanvas() {
+    const canvas = document.createElement('canvas');
+    canvas.width = 256;
+    canvas.height = 256;
+    const ctx = canvas.getContext('2d');
+
+    ctx.fillStyle = '#505864';
+    ctx.fillRect(0, 0, 256, 256);
+
+    ctx.strokeStyle = '#383e47';
+    ctx.lineWidth = 3;
+    for (let x = 0; x <= 256; x += 64) {
+      ctx.beginPath();
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x, 256);
+      ctx.stroke();
+    }
+    for (let y = 0; y <= 256; y += 64) {
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(256, y);
+      ctx.stroke();
+    }
+
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
+    for (let i = 0; i < 350; i++) {
+      const rx = Math.random() * 256;
+      const ry = Math.random() * 256;
+      ctx.fillRect(rx, ry, 2, 2);
+    }
+
+    const tex = new THREE.CanvasTexture(canvas);
+    tex.wrapS = THREE.RepeatWrapping;
+    tex.wrapT = THREE.RepeatWrapping;
+    tex.colorSpace = THREE.SRGBColorSpace;
+    return tex;
+  }
+
+  _buildRoadsideBuildings(config) {
+    if (!this.trackSpline || !this.trackLength) return;
+
+    const isNight = ['city', 'tokyo', 'cyber', 'orbital'].includes(this.trackKey);
+    const theme = this.trackKey;
+
+    // 1. Generate Procedural Textures for Roadside Architecture
+    const windowTex = this._createWindowCanvas(theme, isNight);
+    const storefrontTex = this._createStorefrontCanvas(theme, config.id);
+    const billboardTex = this._createBillboardCanvas(config.id, config.accent, config.secondaryAccent);
+    const tokyoSignTex = (config.id === 'tokyo' || config.id === 'cyber') ? this._createTokyoSignCanvas() : null;
+    const sidewalkTex = this._createSidewalkCanvas();
+
+    // 2. Build Continuous Sidewalk Ribbons on both sides (outside guardrails, leading to buildings)
+    const walkSegments = 260;
+    const walkVerts = [];
+    const walkIndices = [];
+    const walkUvs = [];
+
+    for (let s = 0; s <= walkSegments; s++) {
+      const p = (s / walkSegments) * this.trackLength;
+      const { center, normal } = this.trackSpline.sampleAtProgress(p);
+
+      const pL1 = center.clone().addScaledVector(normal, ROAD_HALF_WIDTH + 2.0);
+      const pL2 = center.clone().addScaledVector(normal, ROAD_HALF_WIDTH + 8.5);
+      const pR1 = center.clone().addScaledVector(normal, -(ROAD_HALF_WIDTH + 2.0));
+      const pR2 = center.clone().addScaledVector(normal, -(ROAD_HALF_WIDTH + 8.5));
+
+      walkVerts.push(
+        pL1.x, 0.08, pL1.z,
+        pL2.x, 0.08, pL2.z,
+        pR1.x, 0.08, pR1.z,
+        pR2.x, 0.08, pR2.z,
+      );
+
+      const u = (s / walkSegments) * 50;
+      walkUvs.push(0, u, 1, u, 0, u, 1, u);
+
+      if (s < walkSegments) {
+        const base = s * 4;
+        walkIndices.push(base, base + 4, base + 1, base + 1, base + 4, base + 5);
+        walkIndices.push(base + 2, base + 3, base + 6, base + 3, base + 7, base + 6);
+      }
+    }
+
+    const walkGeo = new THREE.BufferGeometry();
+    walkGeo.setAttribute('position', new THREE.Float32BufferAttribute(walkVerts, 3));
+    walkGeo.setAttribute('uv', new THREE.Float32BufferAttribute(walkUvs, 2));
+    walkGeo.setIndex(walkIndices);
+    walkGeo.computeVertexNormals();
+
+    const walkMat = new THREE.MeshStandardMaterial({
+      map: sidewalkTex,
+      color: 0x5a636e,
+      roughness: 0.85,
+      metalness: 0.1,
+      side: THREE.DoubleSide,
+    });
+    this.trackObjects.add(new THREE.Mesh(walkGeo, walkMat));
+
+    // 3. Materials for Roadside Buildings
+    const frontMat = new THREE.MeshStandardMaterial({
+      map: windowTex,
+      roughness: 0.35,
+      metalness: 0.4,
+      emissive: isNight ? 0xffffff : 0x000000,
+      emissiveMap: isNight ? windowTex : null,
+      emissiveIntensity: isNight ? 0.75 : 0.0,
+    });
+
+    const storefrontMat = new THREE.MeshStandardMaterial({
+      map: storefrontTex,
+      roughness: 0.3,
+      metalness: 0.35,
+      emissive: isNight ? 0xffffff : 0x000000,
+      emissiveMap: isNight ? storefrontTex : null,
+      emissiveIntensity: isNight ? 0.85 : 0.0,
+    });
+
+    const wallColor = theme === 'london' ? 0x643226 : (theme === 'desert' ? 0x6e3d2a : (theme === 'alpine' ? 0x322822 : 0x151a24));
+    const sideWallMat = new THREE.MeshStandardMaterial({
+      color: wallColor,
+      roughness: 0.85,
+      metalness: 0.2,
+    });
+
+    const roofMat = new THREE.MeshStandardMaterial({
+      color: 0x12161f,
+      roughness: 0.9,
+      metalness: 0.15,
+    });
+
+    const groundFloorMat = new THREE.MeshStandardMaterial({
+      color: 0x0c0f16,
+      roughness: 0.95,
+    });
+
+    const neonAccentMat = new THREE.MeshBasicMaterial({
+      color: config.accent || 0x38f5c2,
+      toneMapped: false,
+    });
+
+    const neonSecMat = new THREE.MeshBasicMaterial({
+      color: config.secondaryAccent || 0xff0077,
+      toneMapped: false,
+    });
+
+    const beaconRedMat = new THREE.MeshBasicMaterial({
+      color: 0xff1515,
+      toneMapped: false,
+    });
+
+    const billboardMat = new THREE.MeshBasicMaterial({
+      map: billboardTex,
+      toneMapped: false,
+    });
+
+    const darkMetalMat = new THREE.MeshStandardMaterial({
+      color: 0x1a212b,
+      metalness: 0.8,
+      roughness: 0.3,
+    });
+
+    // Reusable child geometries
+    const acGeo = new THREE.BoxGeometry(2.4, 1.4, 2.4);
+    const antennaGeo = new THREE.CylinderGeometry(0.08, 0.16, 8.5, 6);
+    const beaconGeo = new THREE.SphereGeometry(0.35, 6, 6);
+    const bbGeo = new THREE.BoxGeometry(9.6, 4.8, 0.3);
+    const bbArmGeo = new THREE.BoxGeometry(0.2, 0.2, 1.4);
+
+    // 4. Sample Track Spline & Build Flanking Roadside Buildings
+    const stepDist = 22.0;
+    const totalSteps = Math.max(28, Math.floor(this.trackLength / stepDist));
+
+    for (let i = 0; i < totalSteps; i++) {
+      const progress = (i / totalSteps) * this.trackLength;
+      const { center, normal } = this.trackSpline.sampleAtProgress(progress);
+
+      for (const side of [-1, 1]) {
+        // Natural cross-street / alleyway gap every 4-5 buildings
+        if ((i + (side > 0 ? 1 : 0)) % 5 === 0) {
+          continue;
+        }
+
+        const seed = Math.abs((i * 47 + (side > 0 ? 83 : 29)) % 1000);
+        const archType = seed % 4; // 0: Retail Block, 1: Step-Back Tower, 2: Billboard Building, 3: Tall Tower
+
+        const bw = 15.0 + (seed % 6); // 15m to 20m along road
+        const bd = 16.0 + ((seed * 3) % 8); // 16m to 23m deep
+
+        let bh;
+        if (archType === 1) {
+          bh = 38.0 + (seed % 26); // 38m to 64m
+        } else if (archType === 2) {
+          bh = 26.0 + (seed % 18); // 26m to 44m
+        } else {
+          bh = 20.0 + (seed % 20); // 20m to 40m
+        }
+
+        // Safe placement: front face starts at ROAD_HALF_WIDTH + 8.5m
+        const distFront = ROAD_HALF_WIDTH + 8.5;
+        const distCenter = distFront + bd / 2;
+        const buildingPos = center.clone().addScaledVector(normal, side * distCenter);
+
+        // Building Group for compound architecture
+        const buildingGroup = new THREE.Group();
+        buildingGroup.position.copy(buildingPos);
+        buildingGroup.lookAt(center.x, buildingPos.y, center.z);
+
+        if (archType === 0) {
+          // --- ARCHETYPE 0: Ground-Floor Retail Storefront + Upper Window Floors ---
+          const podiumH = 5.4;
+          const podiumMesh = new THREE.Mesh(new THREE.BoxGeometry(bw, podiumH, bd), [
+            sideWallMat,
+            sideWallMat,
+            roofMat,
+            groundFloorMat,
+            storefrontMat, // Front face (+Z) facing road
+            sideWallMat,
+          ]);
+          podiumMesh.position.y = podiumH / 2 - 0.2;
+          buildingGroup.add(podiumMesh);
+
+          const upperH = Math.max(12, bh - podiumH);
+          const upperMesh = new THREE.Mesh(new THREE.BoxGeometry(bw, upperH, bd), [
+            sideWallMat,
+            sideWallMat,
+            roofMat,
+            groundFloorMat,
+            frontMat, // Front face (+Z) facing road
+            sideWallMat,
+          ]);
+          upperMesh.position.y = podiumH + upperH / 2 - 0.2;
+          buildingGroup.add(upperMesh);
+
+          // Glowing neon roofline edge
+          if (isNight || config.id === 'city' || config.id === 'tokyo' || config.id === 'cyber') {
+            const trim = new THREE.Mesh(new THREE.BoxGeometry(bw + 0.2, 0.4, 0.4), neonAccentMat);
+            trim.position.set(0, podiumH + upperH, bd / 2);
+            buildingGroup.add(trim);
+          }
+
+          // Rooftop AC unit
+          const ac = new THREE.Mesh(acGeo, darkMetalMat);
+          ac.position.set((seed % 4) - 2, podiumH + upperH + 0.7, 0);
+          buildingGroup.add(ac);
+
+        } else if (archType === 1) {
+          // --- ARCHETYPE 1: Two-Tier Stepped Skyscraper with Antenna Spire ---
+          const lowerH = bh * 0.55;
+          const lowerMesh = new THREE.Mesh(new THREE.BoxGeometry(bw, lowerH, bd), [
+            sideWallMat,
+            sideWallMat,
+            roofMat,
+            groundFloorMat,
+            frontMat,
+            sideWallMat,
+          ]);
+          lowerMesh.position.y = lowerH / 2 - 0.2;
+          buildingGroup.add(lowerMesh);
+
+          const towerW = bw * 0.72;
+          const towerD = bd * 0.72;
+          const towerH = bh * 0.55;
+          const towerMesh = new THREE.Mesh(new THREE.BoxGeometry(towerW, towerH, towerD), [
+            sideWallMat,
+            sideWallMat,
+            roofMat,
+            groundFloorMat,
+            frontMat,
+            sideWallMat,
+          ]);
+          towerMesh.position.set(0, lowerH + towerH / 2 - 0.2, -bd * 0.08);
+          buildingGroup.add(towerMesh);
+
+          // Rooftop Antenna Mast with Glowing Red Aviation Warning Beacon
+          const antenna = new THREE.Mesh(antennaGeo, darkMetalMat);
+          antenna.position.set(towerW * 0.25, lowerH + towerH + 4.25, -bd * 0.08);
+          const beacon = new THREE.Mesh(beaconGeo, beaconRedMat);
+          beacon.position.set(0, 4.25, 0);
+          antenna.add(beacon);
+          buildingGroup.add(antenna);
+
+          // Glowing Neon Trim on Tower Crown
+          if (isNight || config.id === 'city' || config.id === 'tokyo' || config.id === 'cyber') {
+            const crownTrim = new THREE.Mesh(new THREE.BoxGeometry(towerW + 0.2, 0.45, towerD + 0.2), neonSecMat);
+            crownTrim.position.set(0, lowerH + towerH, -bd * 0.08);
+            buildingGroup.add(crownTrim);
+          }
+
+        } else if (archType === 2) {
+          // --- ARCHETYPE 2: Roadside Building with Cantilevered 3D Neon Billboard ---
+          const mainMesh = new THREE.Mesh(new THREE.BoxGeometry(bw, bh, bd), [
+            sideWallMat,
+            sideWallMat,
+            roofMat,
+            groundFloorMat,
+            frontMat,
+            sideWallMat,
+          ]);
+          mainMesh.position.y = bh / 2 - 0.2;
+          buildingGroup.add(mainMesh);
+
+          // 3D Neon Billboard mounted on front facade facing oncoming racers
+          const billboardMesh = new THREE.Mesh(bbGeo, [
+            neonAccentMat,
+            neonAccentMat,
+            neonAccentMat,
+            neonAccentMat,
+            billboardMat, // Front
+            darkMetalMat, // Back
+          ]);
+          const bbY = Math.min(bh - 3.5, 14.5);
+          billboardMesh.position.set(0, bbY, bd / 2 + 0.8);
+          billboardMesh.rotation.y = side > 0 ? 0.09 : -0.09;
+          buildingGroup.add(billboardMesh);
+
+          const arm1 = new THREE.Mesh(bbArmGeo, darkMetalMat);
+          arm1.position.set(-3.6, bbY, bd / 2 + 0.4);
+          const arm2 = new THREE.Mesh(bbArmGeo, darkMetalMat);
+          arm2.position.set(3.6, bbY, bd / 2 + 0.4);
+          buildingGroup.add(arm1, arm2);
+
+          // Rooftop AC unit
+          const ac = new THREE.Mesh(acGeo, darkMetalMat);
+          ac.position.set(0, bh + 0.7, 0);
+          buildingGroup.add(ac);
+
+        } else {
+          // --- ARCHETYPE 3: Sleek Office Tower with Neon Parapet & Beacon ---
+          const mainMesh = new THREE.Mesh(new THREE.BoxGeometry(bw, bh, bd), [
+            sideWallMat,
+            sideWallMat,
+            roofMat,
+            groundFloorMat,
+            frontMat,
+            sideWallMat,
+          ]);
+          mainMesh.position.y = bh / 2 - 0.2;
+          buildingGroup.add(mainMesh);
+
+          // Front-edge Neon Strip
+          if (isNight || config.id === 'city' || config.id === 'tokyo' || config.id === 'cyber') {
+            const edgeStrip = new THREE.Mesh(new THREE.BoxGeometry(bw + 0.2, 0.4, 0.4), neonAccentMat);
+            edgeStrip.position.set(0, bh, bd / 2);
+            buildingGroup.add(edgeStrip);
+          }
+
+          // Antenna & Beacon on roof corner
+          const antenna = new THREE.Mesh(antennaGeo, darkMetalMat);
+          antenna.position.set(bw * 0.32, bh + 4.25, 0);
+          const beacon = new THREE.Mesh(beaconGeo, beaconRedMat);
+          beacon.position.set(0, 4.25, 0);
+          antenna.add(beacon);
+          buildingGroup.add(antenna);
+        }
+
+        // Tokyo & Cyber Special: Vertical Japanese Kanji Neon Blade on Corner
+        if ((config.id === 'tokyo' || config.id === 'cyber') && tokyoSignTex && (seed % 3 === 0)) {
+          const vSignMesh = new THREE.Mesh(new THREE.BoxGeometry(1.4, 11.0, 0.25), [
+            neonSecMat,
+            neonSecMat,
+            neonSecMat,
+            neonSecMat,
+            new THREE.MeshBasicMaterial({ map: tokyoSignTex, toneMapped: false }),
+            new THREE.MeshBasicMaterial({ map: tokyoSignTex, toneMapped: false }),
+          ]);
+          vSignMesh.position.set(bw / 2 - 0.2, 11.5, bd / 2 + 0.7);
+          buildingGroup.add(vSignMesh);
+        }
+
+        this.trackObjects.add(buildingGroup);
+
+        // --- London Special: Iconic Red Telephone Box on Sidewalk ---
+        if (config.id === 'london' && (i % 3 === 0)) {
+          const boothMesh = new THREE.Mesh(
+            new THREE.BoxGeometry(1.25, 2.7, 1.25),
+            new THREE.MeshStandardMaterial({ color: 0xd4111e, roughness: 0.35, metalness: 0.2 })
+          );
+          const boothPos = center.clone().addScaledVector(normal, side * (ROAD_HALF_WIDTH + 4.5));
+          boothPos.y = 1.35;
+          boothMesh.position.copy(boothPos);
+          boothMesh.lookAt(center.x, 1.35, center.z);
+          this.trackObjects.add(boothMesh);
+        }
+
+        // =========================================================================
+        // TIER 2: TOWERING BACKGROUND SKYSCRAPERS & MEGASTRUCTURES (Behind Tier 1)
+        // =========================================================================
+        if (i % 2 === 0) {
+          const seed2 = Math.abs((i * 71 + (side > 0 ? 59 : 97)) % 1000);
+          const bw2 = 24.0 + (seed2 % 12); // 24m to 35m wide
+          const bd2 = 22.0 + ((seed2 * 2) % 12); // 22m to 33m deep
+          const bh2 = 70.0 + (seed2 % 65); // 70m to 135m tall!
+
+          const distCenter2 = ROAD_HALF_WIDTH + 27.0 + bd2 / 2;
+          const bgPos = center.clone().addScaledVector(normal, side * distCenter2);
+          bgPos.y = bh2 / 2 - 0.5;
+
+          const bgMesh = new THREE.Mesh(new THREE.BoxGeometry(bw2, bh2, bd2), [
+            sideWallMat,
+            sideWallMat,
+            roofMat,
+            groundFloorMat,
+            frontMat,
+            sideWallMat,
+          ]);
+          bgMesh.position.copy(bgPos);
+          bgMesh.lookAt(center.x, bgPos.y, center.z);
+
+          // Pulsing red aviation warning beacon on peak
+          const bgBeacon = new THREE.Mesh(beaconGeo, beaconRedMat);
+          bgBeacon.position.set(0, bh2 / 2 + 1.2, 0);
+          bgMesh.add(bgBeacon);
+
+          // Glowing neon crown on skyscraper roof
+          if (isNight || config.id === 'city' || config.id === 'tokyo' || config.id === 'cyber') {
+            const crownGeo = new THREE.BoxGeometry(bw2 * 0.85, 1.2, bd2 * 0.85);
+            const crownMesh = new THREE.Mesh(crownGeo, neonSecMat);
+            crownMesh.position.set(0, bh2 / 2 + 0.6, 0);
+            bgMesh.add(crownMesh);
+          }
+
+          this.trackObjects.add(bgMesh);
+        }
+      }
+    }
+  }
+
   _buildDecorations(config) {
+    // 1. Build roadside buildings & towering skyscrapers directly lining both sides of the track
+    this._buildRoadsideBuildings(config);
+
+    // 2. Distant horizon landmarks
     if (this.trackKey === 'city') {
       this._buildCitySkyline(config);
     } else if (this.trackKey === 'desert') {

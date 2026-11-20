@@ -2,8 +2,8 @@
   "profile": {
     "username": "ApexRacer",
     "credits": 16350,
-    "currentLevel": 3,
-    "unlockedLevel": 3,
+    "currentLevel": 1,
+    "unlockedLevel": 2,
     "levelStars": {
       "1": 3,
       "2": 0,
@@ -20,8 +20,8 @@
     ],
     "upgrades": {
       "triumph": {
-        "speed": 0,
-        "nitro": 0,
+        "speed": 1,
+        "nitro": 1,
         "handling": 0,
         "accel": 0
       },
@@ -42,20 +42,20 @@
       }
     },
     "bestTimes": {
-      "london": "00:37.50",
+      "london": "00:36.27",
       "city": "00:48:35",
       "desert": 30.433799999997092,
       "tokyo": 39.676100000008866
     },
-    "totalRaces": 14,
+    "totalRaces": 15,
     "totalWins": 9,
-    "totalDriftDistance": 1440,
+    "totalDriftDistance": 1580,
     "music": true,
     "sound": true,
     "quality": "high",
     "steeringMode": "buttons",
     "haptics": true,
-    "coins": 1637,
+    "coins": 1202,
     "gems": 0
   },
   "leaderboard": {
@@ -165,11 +165,20 @@
       {
         "name": "You (GT 86)",
         "car": "GT 86",
+        "time": 36.27,
+        "driftDistance": 140,
+        "position": 6,
+        "date": "2026-11-20",
+        "rank": 8
+      },
+      {
+        "name": "You (GT 86)",
+        "car": "GT 86",
         "time": 36.4,
         "driftDistance": 140,
         "position": 6,
         "date": "2026-11-14",
-        "rank": 8
+        "rank": 9
       },
       {
         "name": "You (GT 86)",
@@ -178,7 +187,7 @@
         "driftDistance": 140,
         "position": 7,
         "date": "2026-11-14",
-        "rank": 9
+        "rank": 10
       },
       {
         "name": "You (GT 86)",
@@ -187,7 +196,7 @@
         "driftDistance": 140,
         "position": 8,
         "date": "2026-11-14",
-        "rank": 10
+        "rank": 11
       },
       {
         "name": "ApexRacer",
@@ -196,31 +205,31 @@
         "driftDistance": 180,
         "position": 1,
         "date": "2026-11-13",
-        "rank": 11
+        "rank": 12
       },
       {
-        "rank": 12,
+        "rank": 13,
         "name": "BigBenRacer",
         "car": "Triumph",
         "time": 78.4,
         "date": "2026-11-12"
       },
       {
-        "rank": 13,
+        "rank": 14,
         "name": "RoyalApex",
         "car": "Phantom",
         "time": 80.1,
         "date": "2026-11-12"
       },
       {
-        "rank": 14,
+        "rank": 15,
         "name": "ThamesDrift",
         "car": "Blade R",
         "time": 82.5,
         "date": "2026-11-13"
       },
       {
-        "rank": 15,
+        "rank": 16,
         "name": "SpeedKingUK",
         "car": "Specter",
         "time": 84.9,
@@ -385,6 +394,17 @@
     ]
   },
   "raceHistory": [
+    {
+      "name": "You (GT 86)",
+      "car": "GT 86",
+      "time": 36.27,
+      "driftDistance": 140,
+      "position": 6,
+      "date": "2026-11-20",
+      "rank": 8,
+      "trackId": "london",
+      "timestamp": "2026-11-20T08:32:31.268Z"
+    },
     {
       "name": "You (GT 86)",
       "car": "GT 86",
