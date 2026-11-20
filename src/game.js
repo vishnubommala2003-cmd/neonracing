@@ -1049,6 +1049,23 @@ export class RacingGame {
     return tex;
   }
 
+  _isClearOfRoad(pos, halfExtent, currentProgress, trackLength) {
+    const checkSteps = 140;
+    const minSafeDist = ROAD_HALF_WIDTH + halfExtent + 4.5;
+    for (let s = 0; s < checkSteps; s++) {
+      const prog = (s / checkSteps) * trackLength;
+      const splineDist = Math.min(Math.abs(prog - currentProgress), trackLength - Math.abs(prog - currentProgress));
+      if (splineDist < 38.0) continue;
+
+      const roadPoint = this.trackSpline.sampleAtProgress(prog).center;
+      const d = Math.hypot(pos.x - roadPoint.x, pos.z - roadPoint.z);
+      if (d < minSafeDist) {
+        return false;
+      }
+    }
+    return true;
+  }
+
   _buildRoadsideBuildings(config) {
     if (!this.trackSpline || !this.trackLength) return;
 
@@ -1072,10 +1089,31 @@ export class RacingGame {
       const p = (s / walkSegments) * this.trackLength;
       const { center, normal } = this.trackSpline.sampleAtProgress(p);
 
+      let leftOffset = ROAD_HALF_WIDTH + 8.5;
+      let rightOffset = ROAD_HALF_WIDTH + 8.5;
+
+      for (let chk = 0; chk < this.trackLength; chk += 15) {
+        const sDist = Math.min(Math.abs(chk - p), this.trackLength - Math.abs(chk - p));
+        if (sDist < 40) continue;
+        const otherCenter = this.trackSpline.sampleAtProgress(chk).center;
+
+        const testL = center.clone().addScaledVector(normal, leftOffset);
+        const dL = Math.hypot(testL.x - otherCenter.x, testL.z - otherCenter.z);
+        if (dL < ROAD_HALF_WIDTH + 2.0) {
+          leftOffset = ROAD_HALF_WIDTH + 2.0;
+        }
+
+        const testR = center.clone().addScaledVector(normal, -rightOffset);
+        const dR = Math.hypot(testR.x - otherCenter.x, testR.z - otherCenter.z);
+        if (dR < ROAD_HALF_WIDTH + 2.0) {
+          rightOffset = ROAD_HALF_WIDTH + 2.0;
+        }
+      }
+
       const pL1 = center.clone().addScaledVector(normal, ROAD_HALF_WIDTH + 2.0);
-      const pL2 = center.clone().addScaledVector(normal, ROAD_HALF_WIDTH + 8.5);
+      const pL2 = center.clone().addScaledVector(normal, leftOffset);
       const pR1 = center.clone().addScaledVector(normal, -(ROAD_HALF_WIDTH + 2.0));
-      const pR2 = center.clone().addScaledVector(normal, -(ROAD_HALF_WIDTH + 8.5));
+      const pR2 = center.clone().addScaledVector(normal, -rightOffset);
 
       walkVerts.push(
         pL1.x, 0.08, pL1.z,
@@ -1212,6 +1250,12 @@ export class RacingGame {
         const distFront = ROAD_HALF_WIDTH + 8.5;
         const distCenter = distFront + bd / 2;
         const buildingPos = center.clone().addScaledVector(normal, side * distCenter);
+
+        // Discard any building that intersects or sits on any other part of the track
+        const buildingRadius = Math.hypot(bw / 2, bd / 2);
+        if (!this._isClearOfRoad(buildingPos, buildingRadius, progress, this.trackLength)) {
+          continue;
+        }
 
         // Building Group for compound architecture
         const buildingGroup = new THREE.Group();
@@ -1384,15 +1428,17 @@ export class RacingGame {
 
         // --- London Special: Iconic Red Telephone Box on Sidewalk ---
         if (config.id === 'london' && (i % 3 === 0)) {
-          const boothMesh = new THREE.Mesh(
-            new THREE.BoxGeometry(1.25, 2.7, 1.25),
-            new THREE.MeshStandardMaterial({ color: 0xd4111e, roughness: 0.35, metalness: 0.2 })
-          );
           const boothPos = center.clone().addScaledVector(normal, side * (ROAD_HALF_WIDTH + 4.5));
-          boothPos.y = 1.35;
-          boothMesh.position.copy(boothPos);
-          boothMesh.lookAt(center.x, 1.35, center.z);
-          this.trackObjects.add(boothMesh);
+          if (this._isClearOfRoad(boothPos, 1.5, progress, this.trackLength)) {
+            const boothMesh = new THREE.Mesh(
+              new THREE.BoxGeometry(1.25, 2.7, 1.25),
+              new THREE.MeshStandardMaterial({ color: 0xd4111e, roughness: 0.35, metalness: 0.2 })
+            );
+            boothPos.y = 1.35;
+            boothMesh.position.copy(boothPos);
+            boothMesh.lookAt(center.x, 1.35, center.z);
+            this.trackObjects.add(boothMesh);
+          }
         }
 
         // =========================================================================
@@ -1406,6 +1452,13 @@ export class RacingGame {
 
           const distCenter2 = ROAD_HALF_WIDTH + 27.0 + bd2 / 2;
           const bgPos = center.clone().addScaledVector(normal, side * distCenter2);
+
+          // Discard any background skyscraper that would overlap or sit on any part of the track
+          const bgRadius = Math.hypot(bw2 / 2, bd2 / 2);
+          if (!this._isClearOfRoad(bgPos, bgRadius, progress, this.trackLength)) {
+            continue;
+          }
+
           bgPos.y = bh2 / 2 - 0.5;
 
           const bgMesh = new THREE.Mesh(new THREE.BoxGeometry(bw2, bh2, bd2), [
@@ -2800,9 +2853,23 @@ export class RacingGame {
       player.slipAngle = lerp(player.slipAngle, 0, 8.0 * dt);
     }
 
-    // Lane positioning (Left steers Left, Right steers Right)
-    const speedRatio = clamp(player.speed / baseTopSpeed, 0.2, 1.2);
-    player.lane += rawSteering * turnStrength * speedRatio * dt;
+    // USER-CONTROLLED MANUAL TURNING & ROAD CURVATURE INERTIA
+    // If the road curves and the user does not steer, centrifugal inertia carries the car outwards towards the barrier!
+    // The user MUST actively steer to turn the car through every corner.
+    const currSample = this.trackSpline.sampleAtProgress(player.progress);
+    const lookAheadProg = player.progress + Math.max(6.0, player.speed * 0.22);
+    const aheadSample = this.trackSpline.sampleAtProgress(lookAheadProg);
+    const curveCross = (currSample.tangent.x * aheadSample.tangent.z - currSample.tangent.z * aheadSample.tangent.x);
+
+    // Negative curveCross = road turns right -> centrifugal inertia pushes left (+lane)
+    // Positive curveCross = road turns left -> centrifugal inertia pushes right (-lane)
+    const curvePush = clamp(-curveCross * 10.0, -1.0, 1.0) * (player.speed / baseTopSpeed) * 16.5;
+
+    const speedRatio = clamp(player.speed / baseTopSpeed, 0.25, 1.25);
+    const userTurnIntent = rawSteering * turnStrength * speedRatio;
+
+    // Net lateral positioning: user steering + centrifugal inertia
+    player.lane += (userTurnIntent + curvePush) * dt;
 
     const maxRoadLane = ROAD_HALF_WIDTH - 2.2;
 
@@ -2967,12 +3034,18 @@ export class RacingGame {
       v.object.position.set(pos.x, 0, pos.z);
 
       const yaw = Math.atan2(tangent.x, tangent.z) + Math.PI;
-      const steerRoll = v.isPlayer ? (v.slipAngle * 0.22) : 0;
-      v.object.rotation.set(0, yaw - (v.slipAngle || 0), steerRoll);
+      const userSteerAngle = v.isPlayer ? ((v.visualSteer || 0) * 0.24 - (v.slipAngle || 0) * 0.45) : 0;
+      const steerRoll = v.isPlayer ? ((v.visualSteer || 0) * 0.04 + (v.slipAngle || 0) * 0.20) : 0;
+      v.object.rotation.set(0, yaw + userSteerAngle, steerRoll);
 
-      // Wheel rotation
+      // Wheel rotation and front-wheel manual turning
       if (v.object.userData.wheels) {
-        v.object.userData.wheels.forEach((w) => { w.rotation.x += v.speed * dt * 0.35; });
+        v.object.userData.wheels.forEach((w) => {
+          w.rotation.x += v.speed * dt * 0.35;
+          if (w.position.z < 0 && v.isPlayer) {
+            w.rotation.y = (v.visualSteer || 0) * 0.44;
+          }
+        });
       }
     });
   }
