@@ -2764,23 +2764,13 @@ export class RacingGame {
       player.slipAngle = lerp(player.slipAngle, 0, 8.0 * dt);
     }
 
-    // USER-CONTROLLED MANUAL TURNING & ROAD CURVATURE INERTIA
-    // If the road curves and the user does not steer, centrifugal inertia carries the car outwards towards the barrier!
-    // The user MUST actively steer to turn the car through every corner.
-    const currSample = this.trackSpline.sampleAtProgress(player.progress);
-    const lookAheadProg = player.progress + Math.max(6.0, player.speed * 0.22);
-    const aheadSample = this.trackSpline.sampleAtProgress(lookAheadProg);
-    const curveCross = (currSample.tangent.x * aheadSample.tangent.z - currSample.tangent.z * aheadSample.tangent.x);
+    // 100% USER-CONTROLLED MANUAL STEERING
+    // Pure user control: Left steers left, Right steers right.
+    // When no key is pressed, the car drives straight in its lane with zero auto-pull!
+    const steerSpeedFactor = clamp(player.speed / 16.0, 0.0, 1.0);
+    const userTurnIntent = rawSteering * turnStrength * steerSpeedFactor;
 
-    // Negative curveCross = road turns right -> centrifugal inertia pushes left (+lane)
-    // Positive curveCross = road turns left -> centrifugal inertia pushes right (-lane)
-    const curvePush = clamp(-curveCross * 10.0, -1.0, 1.0) * (player.speed / baseTopSpeed) * 16.5;
-
-    const speedRatio = clamp(player.speed / baseTopSpeed, 0.25, 1.25);
-    const userTurnIntent = rawSteering * turnStrength * speedRatio;
-
-    // Net lateral positioning: user steering + centrifugal inertia
-    player.lane += (userTurnIntent + curvePush) * dt;
+    player.lane += userTurnIntent * dt;
 
     const maxRoadLane = ROAD_HALF_WIDTH - 2.2;
 
@@ -2971,68 +2961,36 @@ export class RacingGame {
   _updateCinematicCountdownCamera(dt, player) {
     if (!player || !player.object || !this.trackSpline) return;
 
-    const { tangent, normal } = this.trackSpline.sampleAtProgress(player.progress);
+    const { tangent } = this.trackSpline.sampleAtProgress(player.progress);
     const carPos = player.object.position;
 
     // Countdown runs from 3.0 down to 0.0
     const total = this.totalCountdown || 3.0;
     const t = Math.max(0, Math.min(total, total - this.countdown));
-    const p = t / total; // 0.0 to 1.0
+    const p = Math.max(0, Math.min(1, t / total)); // 0.0 to 1.0
 
-    // Smoothstep helper for continuous, silky non-linear camera motion
-    const smoothstep = (min, max, val) => {
-      const x = Math.max(0, Math.min(1, (val - min) / (max - min)));
-      return x * x * (3 - 2 * x);
-    };
+    // Smoothstep interpolation (0.0 to 1.0)
+    const s = p * p * (3 - 2 * p);
 
-    // 4 Keyframes smoothly showcasing every angle of the 3D car:
-    // Keyframe 0 (t = 0.0s, count = 3): Front 3/4 beauty hero shot (grille, badge, GT 86 plate, headlights)
-    const kf0Cam = carPos.clone().addScaledVector(tangent, 5.8).addScaledVector(normal, 3.4);
-    kf0Cam.y = 1.35;
-    const kf0Look = carPos.clone().addScaledVector(tangent, 0.8);
-    kf0Look.y = 0.85;
+    // Starting Grid Countdown Animation:
+    // Centered directly behind the car, perfectly aligned with the road ahead.
+    // Starts at an elevated starting grid crane view (y = 6.2, back = 16.5)
+    // Smoothly descends along the centerline into the race chase view (y = 4.8, back = 13.5)
+    // Zero lateral swing to the left or right! Perfectly aligned for race launch.
+    const camBack = lerp(16.5, 13.5, s);
+    const camY = lerp(6.2, 4.8, s);
 
-    // Keyframe 1 (t = 1.0s, count = 2): Sweeping side profile (alloy wheels, red Brembo calipers, fastback roof)
-    const kf1Cam = carPos.clone().addScaledVector(tangent, 1.2).addScaledVector(normal, -4.8);
-    kf1Cam.y = 1.7;
-    const kf1Look = carPos.clone().addScaledVector(tangent, 0.2);
-    kf1Look.y = 0.95;
+    const targetCamPos = carPos.clone().addScaledVector(tangent, -camBack);
+    targetCamPos.y = camY;
 
-    // Keyframe 2 (t = 2.0s, count = 1): Rear 3/4 swooping up (GT sports wing, LED taillights, dual chrome exhausts)
-    const kf2Cam = carPos.clone().addScaledVector(tangent, -6.5).addScaledVector(normal, -2.6);
-    kf2Cam.y = 2.6;
-    const kf2Look = carPos.clone().addScaledVector(tangent, 2.5);
-    kf2Look.y = 1.1;
-
-    // Keyframe 3 (t = 3.0s, count = 0 / GO!): Seamless handoff directly into standard Chase Camera!
-    const kf3Cam = carPos.clone().addScaledVector(tangent, -13.5);
-    kf3Cam.y = 4.8;
-    const kf3Look = carPos.clone().addScaledVector(tangent, 12.0);
-    kf3Look.y = 1.2;
-
-    const targetCamPos = new THREE.Vector3();
-    const targetLookAt = new THREE.Vector3();
-
-    if (p < 0.333) {
-      const s = smoothstep(0, 0.333, p);
-      targetCamPos.lerpVectors(kf0Cam, kf1Cam, s);
-      targetLookAt.lerpVectors(kf0Look, kf1Look, s);
-    } else if (p < 0.666) {
-      const s = smoothstep(0.333, 0.666, p);
-      targetCamPos.lerpVectors(kf1Cam, kf2Cam, s);
-      targetLookAt.lerpVectors(kf1Look, kf2Look, s);
-    } else {
-      const s = smoothstep(0.666, 1.0, p);
-      targetCamPos.lerpVectors(kf2Cam, kf3Cam, s);
-      targetLookAt.lerpVectors(kf2Look, kf3Look, s);
-    }
+    const targetLookAt = carPos.clone().addScaledVector(tangent, 12.0);
+    targetLookAt.y = lerp(1.0, 1.2, s);
 
     this.camera.position.copy(targetCamPos);
     this.camera.lookAt(targetLookAt);
 
-    // Smoothly blend FOV from cinematic 62° down to standard chase 54°
-    const targetFov = THREE.MathUtils.lerp(62, 54, p);
-    this.camera.fov = targetFov;
+    // Smoothly blend FOV from 62° down to standard chase 54°
+    this.camera.fov = lerp(62, 54, s);
     this.camera.updateProjectionMatrix();
   }
 
