@@ -327,8 +327,8 @@ const game = new RacingGame(sceneRoot, {
     // Sync with Node.js Express backend
     BackendAPI.submitRaceScore({
       trackId: selectedTrackKey,
-      playerName: 'You (GT 86)',
-      carName: 'GT 86',
+      playerName: 'You (Apex GT)',
+      carName: 'Apex GT',
       time: res.time,
       driftDistance: res.driftBonus ? res.driftBonus * 2 : 140,
       position: playerPos,
@@ -474,7 +474,7 @@ function renderEvents() {
         ${!isUnlocked ? '🔒' : flagIcons[idx] + ' ' + (lvl.roadName ? lvl.roadName.split(' ')[0].toUpperCase() : lvl.name.toUpperCase())}
       </div>
       <b>${lvl.name}</b>
-      <span>${isUnlocked ? `GT 86 · ${starStr}` : `${lvl.level * 3} ⭐ REQUIRED`}</span>
+      <span>${isUnlocked ? `Apex GT · ${starStr}` : `${lvl.level * 3} ⭐ REQUIRED`}</span>
       <small>${lvl.roadName || 'Circuit run'}</small>
     `;
 
@@ -562,7 +562,7 @@ async function renderLeaderboard() {
         <tr>
           <td>#${i + 1}</td>
           <td><b>${r.playerName || 'Racer'}</b></td>
-          <td>${r.carName || 'GT 86'}</td>
+          <td>${r.carName || 'Apex GT'}</td>
           <td>${r.trackId.toUpperCase()}</td>
           <td><b style="color:var(--gold)">${typeof r.time === 'number' ? formatTime(r.time) : r.time}</b></td>
           <td>${r.driftDistance || 0} m</td>
@@ -981,7 +981,7 @@ function initSplashScreen() {
 
   const stages = [
     { p: 25, msg: 'INITIALIZING 3D ENGINE...' },
-    { p: 55, msg: 'TUNING TOYOTA GT 86 BOXER...' },
+    { p: 55, msg: 'TUNING APEX GT V8 TWIN-TURBO...' },
     { p: 85, msg: 'LOADING HIGH-OCTANE TRACKS...' },
     { p: 100, msg: 'READY TO RACE!' },
   ];

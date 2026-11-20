@@ -1,0 +1,297 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 680" width="100%" height="100%">
+  <defs>
+    <!-- Background Gradients -->
+    <radialGradient id="bg-glow" cx="50%" cy="65%" r="60%">
+      <stop offset="0%" stop-color="#0a2a4a" stop-opacity="0.9"/>
+      <stop offset="50%" stop-color="#06162a" stop-opacity="0.95"/>
+      <stop offset="100%" stop-color="#020813" stop-opacity="1"/>
+    </radialGradient>
+
+    <radialGradient id="underglow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#00f0ff" stop-opacity="0.7"/>
+      <stop offset="40%" stop-color="#0099ff" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#0066cc" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- Car Paint Gradients: Electric Cyan-Blue Metallic -->
+    <linearGradient id="body-main" x1="0%" y1="0%" x2="100%" y2="80%">
+      <stop offset="0%" stop-color="#38bdf8"/>
+      <stop offset="35%" stop-color="#0284c7"/>
+      <stop offset="70%" stop-color="#0369a1"/>
+      <stop offset="100%" stop-color="#075985"/>
+    </linearGradient>
+
+    <linearGradient id="body-highlight" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#e0f2fe" stop-opacity="0.85"/>
+      <stop offset="40%" stop-color="#38bdf8" stop-opacity="0.4"/>
+      <stop offset="100%" stop-color="#0284c7" stop-opacity="0"/>
+    </linearGradient>
+
+    <linearGradient id="body-shadow" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#075985"/>
+      <stop offset="100%" stop-color="#082f49"/>
+    </linearGradient>
+
+    <!-- Carbon Fiber Material -->
+    <linearGradient id="carbon" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1e293b"/>
+      <stop offset="50%" stop-color="#0f172a"/>
+      <stop offset="100%" stop-color="#020617"/>
+    </linearGradient>
+
+    <!-- Glass & Cockpit Canopy -->
+    <linearGradient id="glass" x1="20%" y1="0%" x2="80%" y2="100%">
+      <stop offset="0%" stop-color="#1e293b"/>
+      <stop offset="30%" stop-color="#0f172a"/>
+      <stop offset="70%" stop-color="#0284c7" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#020617"/>
+    </linearGradient>
+
+    <linearGradient id="glass-reflection" x1="0%" y1="0%" x2="100%" y2="50%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.5"/>
+      <stop offset="45%" stop-color="#38bdf8" stop-opacity="0.15"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+
+    <!-- Wheel & Rim -->
+    <radialGradient id="rim-hub" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#e2e8f0"/>
+      <stop offset="40%" stop-color="#64748b"/>
+      <stop offset="85%" stop-color="#334155"/>
+      <stop offset="100%" stop-color="#0f172a"/>
+    </radialGradient>
+
+    <!-- Glow Filters -->
+    <filter id="neon-glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <filter id="headlight-beam" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="14" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background Environment -->
+  <rect width="1200" height="680" fill="url(#bg-glow)"/>
+
+  <!-- Perspective Speed Grid on Ground -->
+  <g opacity="0.3" stroke="#00f0ff" stroke-width="1">
+    <line x1="0" y1="560" x2="1200" y2="560"/>
+    <line x1="0" y1="590" x2="1200" y2="590"/>
+    <line x1="0" y1="630" x2="1200" y2="630"/>
+    <line x1="600" y1="460" x2="100" y2="680"/>
+    <line x1="600" y1="460" x2="300" y2="680"/>
+    <line x1="600" y1="460" x2="500" y2="680"/>
+    <line x1="600" y1="460" x2="700" y2="680"/>
+    <line x1="600" y1="460" x2="900" y2="680"/>
+    <line x1="600" y1="460" x2="1100" y2="680"/>
+  </g>
+
+  <!-- Ground Shadow & Cyber Underglow -->
+  <ellipse cx="600" cy="535" rx="460" ry="48" fill="#000000" opacity="0.85"/>
+  <ellipse cx="610" cy="532" rx="430" ry="32" fill="url(#underglow)" filter="url(#neon-glow)"/>
+
+  <!-- ================= CAR BODY ================= -->
+  <g id="apex-gt-car">
+
+    <!-- Rear Carbon GT Wing -->
+    <g id="rear-wing">
+      <!-- Wing pylons -->
+      <polygon points="910,340 930,300 945,300 920,345" fill="url(#carbon)"/>
+      <polygon points="980,340 1000,300 1015,300 990,345" fill="url(#carbon)"/>
+      <!-- Main wing blade -->
+      <polygon points="880,305 1060,285 1065,295 885,315" fill="url(#carbon)"/>
+      <!-- Wing endplate -->
+      <polygon points="875,290 900,285 895,330 870,335" fill="url(#body-main)" stroke="#38bdf8" stroke-width="1.5"/>
+      <polygon points="1055,270 1075,265 1070,310 1050,315" fill="url(#body-main)" stroke="#38bdf8" stroke-width="1.5"/>
+    </g>
+
+    <!-- Rear Wheel Assembly (Far side / Rear) -->
+    <g id="rear-wheel">
+      <ellipse cx="880" cy="460" rx="95" ry="95" fill="#0b0f17" stroke="#1e293b" stroke-width="6"/>
+      <ellipse cx="880" cy="460" rx="72" ry="72" fill="#1e293b"/>
+      <!-- Red Caliper -->
+      <path d="M 830 435 A 60 60 0 0 1 855 410 L 865 425 A 42 42 0 0 0 845 445 Z" fill="#ef4444"/>
+      <!-- Brake Disc -->
+      <ellipse cx="880" cy="460" rx="55" ry="55" fill="#475569" stroke="#64748b" stroke-width="2" stroke-dasharray="4,4"/>
+      <!-- Rim Rim Lip -->
+      <ellipse cx="880" cy="460" rx="48" ry="48" fill="url(#rim-hub)"/>
+      <!-- 10 Spokes -->
+      <g stroke="#e2e8f0" stroke-width="4">
+        <line x1="880" y1="460" x2="880" y2="415"/>
+        <line x1="880" y1="460" x2="923" y2="446"/>
+        <line x1="880" y1="460" x2="906" y2="497"/>
+        <line x1="880" y1="460" x2="854" y2="497"/>
+        <line x1="880" y1="460" x2="837" y2="446"/>
+        <line x1="880" y1="460" x2="906" y2="423"/>
+        <line x1="880" y1="460" x2="923" y2="474"/>
+        <line x1="880" y1="460" x2="880" y2="505"/>
+        <line x1="880" y1="460" x2="837" y2="474"/>
+        <line x1="880" y1="460" x2="854" y2="423"/>
+      </g>
+      <circle cx="880" cy="460" r="14" fill="#0f172a" stroke="#38bdf8" stroke-width="2"/>
+    </g>
+
+    <!-- Main Aerodynamic Body Shell (Low-slung sports car profile) -->
+    <g id="body-monocoque">
+      <!-- Lower Chassis & Underbody -->
+      <path d="M 220 500 
+               L 310 500 
+               A 90 90 0 0 1 480 495 
+               L 780 495 
+               A 100 100 0 0 1 975 490 
+               L 1040 475 
+               L 1030 420 
+               L 960 380 
+               L 820 370 
+               L 660 365 
+               L 420 400 
+               L 260 445 
+               L 180 475 
+               L 190 495 
+               Z" 
+            fill="url(#body-shadow)"/>
+
+      <!-- Primary Upper Body Panels -->
+      <path d="M 180 475 
+               C 210 460, 260 435, 340 420 
+               C 390 380, 440 345, 520 320 
+               C 620 310, 740 315, 840 340 
+               C 920 360, 990 385, 1035 415 
+               L 1025 450 
+               C 980 460, 960 400, 880 400 
+               C 800 400, 780 465, 780 475 
+               L 480 475 
+               C 470 415, 330 415, 320 475 
+               L 220 485 
+               Z" 
+            fill="url(#body-main)"/>
+
+      <!-- Body Highlight Crease (Reflecting Studio Sky) -->
+      <path d="M 210 465 
+               C 280 430, 360 410, 480 405 
+               C 620 400, 750 385, 870 375 
+               C 940 370, 990 385, 1030 415 
+               L 1025 422 
+               C 980 395, 930 380, 860 385 
+               C 740 395, 610 410, 475 415 
+               C 350 420, 275 440, 205 475 
+               Z" 
+            fill="url(#body-highlight)"/>
+
+      <!-- Muscular Front Fender Arch -->
+      <path d="M 260 445 
+               C 300 405, 410 405, 450 445 
+               L 440 460 
+               C 405 425, 305 425, 270 460 
+               Z" 
+            fill="url(#body-highlight)"/>
+
+      <!-- Mid-Engine Side Air Intake Sculpting -->
+      <polygon points="680,410 770,390 760,455 690,460" fill="#09182a"/>
+      <polygon points="690,415 760,400 750,450 700,452" fill="url(#carbon)"/>
+      <line x1="685" y1="412" x2="765" y2="395" stroke="#38bdf8" stroke-width="2"/>
+
+      <!-- Aerodynamic Cockpit Canopy (Dark Glass & Pillar Reflections) -->
+      <path d="M 430 395 
+               C 500 335, 560 305, 640 300 
+               C 730 300, 790 325, 845 355 
+               L 815 370 
+               C 765 345, 715 325, 640 325 
+               C 575 325, 510 355, 465 395 
+               Z" 
+            fill="url(#glass)"/>
+
+      <!-- Cockpit Window Glint Reflection -->
+      <path d="M 480 380 
+               C 530 340, 580 320, 645 315 
+               L 640 310 
+               C 570 315, 515 338, 470 375 
+               Z" 
+            fill="url(#glass-reflection)"/>
+
+      <!-- Carbon A-Pillar and Roof Spine -->
+      <polygon points="425,400 440,400 535,325 520,325" fill="url(#carbon)"/>
+      <polygon points="630,300 750,305 745,315 630,310" fill="url(#carbon)"/>
+
+      <!-- Carbon Competition Side Skirts -->
+      <polygon points="475,488 785,488 780,502 470,502" fill="url(#carbon)"/>
+      <line x1="472" y1="490" x2="783" y2="490" stroke="#00f0ff" stroke-width="2"/>
+    </g>
+
+    <!-- Aggressive Front Fascia, Matrix Headlights & Splitter -->
+    <g id="front-fascia">
+      <!-- Carbon Front Splitter -->
+      <polygon points="150,485 240,485 235,502 140,502" fill="url(#carbon)"/>
+      <polygon points="140,475 160,475 155,502 135,502" fill="url(#carbon)"/>
+      <line x1="140" y1="488" x2="240" y2="488" stroke="#00f0ff" stroke-width="2.5"/>
+
+      <!-- Front Grille Vent -->
+      <polygon points="180,475 230,470 225,492 185,492" fill="#040d1a"/>
+
+      <!-- Glowing Cyan Cyber Blade LED Headlight -->
+      <polygon points="215,445 275,430 265,440 210,452" fill="#e0f2fe" filter="url(#headlight-beam)"/>
+      <polygon points="215,445 275,430 265,440 210,452" fill="#38bdf8"/>
+      <polygon points="225,442 260,434 255,438 222,446" fill="#ffffff"/>
+
+      <!-- Headlight Projector Glow Beam -->
+      <ellipse cx="215" cy="448" rx="8" ry="5" fill="#ffffff" filter="url(#headlight-beam)"/>
+      <path d="M 215 448 L 50 470 L 50 495 L 210 455 Z" fill="#38bdf8" opacity="0.2" filter="url(#headlight-beam)"/>
+    </g>
+
+    <!-- Front Wheel Assembly (Hero Wheel in Foreground) -->
+    <g id="front-wheel">
+      <!-- Tire Rubber -->
+      <ellipse cx="380" cy="460" rx="98" ry="98" fill="#0b0f17" stroke="#1e293b" stroke-width="7"/>
+      <!-- Rim Outer Edge -->
+      <ellipse cx="380" cy="460" rx="75" ry="75" fill="#1e293b"/>
+      <!-- Brembo Red Caliper -->
+      <path d="M 330 435 A 62 62 0 0 1 355 410 L 365 425 A 44 44 0 0 0 345 445 Z" fill="#ef4444" filter="url(#neon-glow)"/>
+      <path d="M 330 435 A 62 62 0 0 1 355 410 L 365 425 A 44 44 0 0 0 345 445 Z" fill="#ef4444"/>
+      <!-- Brake Disc Rotor with Cross-Drills -->
+      <ellipse cx="380" cy="460" rx="58" ry="58" fill="#475569" stroke="#64748b" stroke-width="2.5" stroke-dasharray="5,5"/>
+      <!-- Center Hub -->
+      <ellipse cx="380" cy="460" rx="50" ry="50" fill="url(#rim-hub)"/>
+      <!-- 10 Forged Alloy Spokes -->
+      <g stroke="#f8fafc" stroke-width="4.5">
+        <line x1="380" y1="460" x2="380" y2="412"/>
+        <line x1="380" y1="460" x2="426" y2="445"/>
+        <line x1="380" y1="460" x2="408" y2="499"/>
+        <line x1="380" y1="460" x2="352" y2="499"/>
+        <line x1="380" y1="460" x2="334" y2="445"/>
+        <line x1="380" y1="460" x2="408" y2="421"/>
+        <line x1="380" y1="460" x2="426" y2="475"/>
+        <line x1="380" y1="460" x2="380" y2="508"/>
+        <line x1="380" y1="460" x2="334" y2="475"/>
+        <line x1="380" y1="460" x2="352" y2="421"/>
+      </g>
+      <!-- Center Cap with Cyan GT Emblem -->
+      <circle cx="380" cy="460" r="16" fill="#0f172a" stroke="#00f0ff" stroke-width="2.5"/>
+      <circle cx="380" cy="460" r="8" fill="#00f0ff" opacity="0.6"/>
+    </g>
+
+    <!-- Rear OLED Taillight Glow & Titanium Exhaust -->
+    <g id="rear-fascia">
+      <!-- Full-Width OLED Red Lightbar Edge -->
+      <polygon points="1030,412 1045,418 1040,424 1025,418" fill="#ff1e38" filter="url(#neon-glow)"/>
+      <polygon points="1030,412 1045,418 1040,424 1025,418" fill="#ffffff"/>
+      <!-- Dual Titanium Exhaust Tips with Cyan Afterburner Flame -->
+      <ellipse cx="1025" cy="450" rx="9" ry="14" fill="#0f172a" stroke="#cbd5e1" stroke-width="3"/>
+      <ellipse cx="1030" cy="450" rx="6" ry="10" fill="#00f0ff" opacity="0.7" filter="url(#neon-glow)"/>
+    </g>
+
+    <!-- Badging on Door Panel -->
+    <text x="540" y="445" font-family="'Barlow Condensed', sans-serif" font-weight="900" font-size="20" fill="#00f0ff" letter-spacing="3" opacity="0.9">APEX GT</text>
+    <text x="540" y="460" font-family="'Barlow Condensed', sans-serif" font-weight="700" font-size="11" fill="#94a3b8" letter-spacing="2" opacity="0.8">V8 TWIN-TURBO · 780 HP</text>
+
+  </g>
+</svg>
