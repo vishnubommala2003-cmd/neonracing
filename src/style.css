@@ -2537,3 +2537,98 @@ footer {
   filter: brightness(1.15);
   transform: translateY(-1px);
 }
+
+
+/* CINEMATIC LETTERBOX BARS (DASH SLOW-MOTION TAKEDOWN) */
+.cinematic-bars {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 16;
+  overflow: hidden;
+}
+
+.cinematic-bar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 0;
+  background: #000;
+  transition: height 0.32s cubic-bezier(0.2, 0.9, 0.25, 1);
+}
+
+.cinematic-bar.top {
+  top: 0;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.9);
+}
+
+.cinematic-bar.bottom {
+  bottom: 0;
+  box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.9);
+}
+
+.cinematic-bars.active .cinematic-bar {
+  height: 52px;
+}
+
+/* DASH TAKEDOWN ELEVATED SCENE BANNER */
+.dash-takedown-overlay {
+  position: absolute;
+  top: 15%;
+  left: 50%;
+  transform: translateX(-50%) scale(0.65);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 10px 24px;
+  border-radius: 6px;
+  background: linear-gradient(135deg, rgba(16, 8, 0, 0.90), rgba(45, 18, 4, 0.94));
+  border: 1.5px solid #ffb300;
+  box-shadow: 0 0 30px rgba(255, 179, 0, 0.55), inset 0 0 16px rgba(255, 179, 0, 0.25);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 19;
+  transition: opacity 0.22s ease-out, transform 0.28s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.dash-takedown-overlay.active {
+  opacity: 1;
+  transform: translateX(-50%) scale(1.0);
+  animation: pulseTakedownGlow 0.9s infinite alternate ease-in-out;
+}
+
+@keyframes pulseTakedownGlow {
+  0% {
+    box-shadow: 0 0 25px rgba(255, 179, 0, 0.45), inset 0 0 12px rgba(255, 179, 0, 0.2);
+    border-color: #ffaa00;
+  }
+  100% {
+    box-shadow: 0 0 45px rgba(255, 190, 0, 0.85), inset 0 0 22px rgba(255, 200, 0, 0.4);
+    border-color: #ffe066;
+  }
+}
+
+.dash-takedown-overlay .takedown-badge {
+  font: 700 11px 'Barlow Condensed', sans-serif;
+  letter-spacing: 2.5px;
+  color: #ffbe26;
+  text-transform: uppercase;
+  margin-bottom: 2px;
+}
+
+.dash-takedown-overlay .takedown-title {
+  font: 900 32px 'Teko', sans-serif;
+  letter-spacing: 2px;
+  color: #ffffff;
+  text-shadow: 0 0 18px #ff7700, 0 2px 4px #000000;
+  line-height: 1;
+}
+
+.dash-takedown-overlay .takedown-sub {
+  font: 700 13px 'Barlow Condensed', sans-serif;
+  letter-spacing: 1.5px;
+  color: #38f5c2;
+  margin-top: 4px;
+}

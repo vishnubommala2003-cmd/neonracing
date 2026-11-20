@@ -23,6 +23,12 @@ export class RaceAudio {
     this.enginePeak = null;    // Exhaust chamber resonance
     this.engineGain = null;
 
+    // Real Recorded Sports Car Engine Audio
+    this.realEngineBuffer = null;
+    this.realEngineSource = null;
+    this.realEngineGain = null;
+    this.realEngineFilter = null;
+
     // Tire drift & nitro thrust
     this.driftGain = null;
     this.driftFilter = null;
@@ -45,6 +51,40 @@ export class RaceAudio {
     this.settings = { music: true, sound: true };
     this.inRace = false;
     this.isInitialized = false;
+  }
+
+  async _loadRealEngineAudio() {
+    if (this.realEngineBuffer || !this.context) return;
+    try {
+      const res = await fetch('/audio/real_engine_v8.m4a');
+      const ab = await res.arrayBuffer();
+      this.realEngineBuffer = await this.context.decodeAudioData(ab);
+      if (this.inRace && !this.realEngineSource) {
+        this._startRealEngineSource();
+      }
+    } catch (e) {
+      console.warn('Real engine sound fallback to synth:', e);
+    }
+  }
+
+  _startRealEngineSource() {
+    if (!this.context || !this.realEngineBuffer || this.realEngineSource) return;
+    const now = this.context.currentTime;
+
+    this.realEngineSource = this.context.createBufferSource();
+    this.realEngineSource.buffer = this.realEngineBuffer;
+    this.realEngineSource.loop = true;
+    this.realEngineSource.playbackRate.value = 0.70;
+
+    this.realEngineFilter = this.context.createBiquadFilter();
+    this.realEngineFilter.type = 'lowpass';
+    this.realEngineFilter.frequency.value = 2400;
+
+    this.realEngineGain = this.context.createGain();
+    this.realEngineGain.gain.value = (this.settings.sound && this.inRace) ? 0.28 : 0;
+
+    this.realEngineSource.connect(this.realEngineFilter).connect(this.realEngineGain).connect(this.masterGain);
+    this.realEngineSource.start(now);
   }
 
   // Set callback for UI track title updates
@@ -101,6 +141,7 @@ export class RaceAudio {
         // Initialize aggressive engine & sfx
         this._initAggressiveEngine();
         this._initSfxChains();
+        this._loadRealEngineAudio();
       }
     }
 
@@ -341,13 +382,20 @@ export class RaceAudio {
     const now = this.context.currentTime;
     if (!active) {
       if (this.engineGain) this.engineGain.gain.setTargetAtTime(0, now, 0.08);
+      if (this.realEngineGain) this.realEngineGain.gain.setTargetAtTime(0, now, 0.08);
       if (this.driftGain) this.driftGain.gain.setTargetAtTime(0, now, 0.06);
       if (this.nitroGain) this.nitroGain.gain.setTargetAtTime(0, now, 0.06);
       if (this.nitroSubGain) this.nitroSubGain.gain.setTargetAtTime(0, now, 0.06);
     } else {
-      // Throaty, aggressive idle rumble when waiting on grid
+      // Real engine & idle rumble when waiting on grid
+      if (!this.realEngineSource && this.realEngineBuffer) {
+        this._startRealEngineSource();
+      }
+      if (this.realEngineGain && this.settings.sound) {
+        this.realEngineGain.gain.setTargetAtTime(0.24, now, 0.1);
+      }
       if (this.engineGain && this.settings.sound) {
-        this.engineGain.gain.setTargetAtTime(0.14, now, 0.1);
+        this.engineGain.gain.setTargetAtTime(0.10, now, 0.1);
       }
     }
   }
@@ -380,17 +428,22 @@ export class RaceAudio {
     return { gear, rpm: 0.28 + p * 0.72 };
   }
 
-  // DYNAMIC AUTHENTIC SPORTS CAR ENGINE AUDIO UPDATE
-  update(speedKmh, nitroActive, driftIntensity = 0, rawRpmRatio = 0.3) {
-    if (!this.context || !this.engineOsc1) return;
+  // DYNAMIC AUTHENTIC SPORTS CAR ENGINE AUDIO UPDATE (REAL SOUND + BASS SUB-PULSE)
+  update(speedKmh, nitroActive, driftIntensity = 0, rawRpmRatio = 0.3, isSlowMo = false) {
+    if (!this.context) return;
     const now = this.context.currentTime;
 
     if (!this.settings.sound || !this.inRace) {
       if (this.engineGain) this.engineGain.gain.setTargetAtTime(0, now, 0.06);
+      if (this.realEngineGain) this.realEngineGain.gain.setTargetAtTime(0, now, 0.06);
       if (this.driftGain) this.driftGain.gain.setTargetAtTime(0, now, 0.05);
       if (this.nitroGain) this.nitroGain.gain.setTargetAtTime(0, now, 0.05);
       if (this.nitroSubGain) this.nitroSubGain.gain.setTargetAtTime(0, now, 0.05);
       return;
+    }
+
+    if (!this.realEngineSource && this.realEngineBuffer) {
+      this._startRealEngineSource();
     }
 
     const gearInfo = this._getGearRpm(speedKmh);
@@ -403,39 +456,60 @@ export class RaceAudio {
       this._aggressiveExhaustBackfire(isDownshift);
     }
 
-    // Authentic engine fundamental & harmonics tracking RPM smoothly
+    // REAL RECORDED V8 SPORTS CAR AUDIO MODULATION
+    if (this.realEngineSource && this.realEngineGain) {
+      if (isSlowMo) {
+        // Dramatic Slow-Mo Pitch Plunge
+        this.realEngineSource.playbackRate.setTargetAtTime(0.38, now, 0.08);
+        this.realEngineGain.gain.setTargetAtTime(0.38, now, 0.05);
+        if (this.realEngineFilter) {
+          this.realEngineFilter.frequency.setTargetAtTime(750, now, 0.06);
+        }
+      } else {
+        // Dynamic pitch scaling smoothly with real RPM
+        const targetRate = 0.62 + rpm * 1.05 + (nitroActive ? 0.22 : 0);
+        this.realEngineSource.playbackRate.setTargetAtTime(targetRate, now, 0.05);
+
+        const realVol = 0.22 + rpm * 0.18 + (nitroActive ? 0.06 : 0);
+        this.realEngineGain.gain.setTargetAtTime(realVol, now, 0.05);
+
+        if (this.realEngineFilter) {
+          const filterCutoff = 1400 + rpm * 2600 + (nitroActive ? 600 : 0);
+          this.realEngineFilter.frequency.setTargetAtTime(filterCutoff, now, 0.06);
+        }
+      }
+    }
+
+    // Synth Sub-Bass rumble reinforcement
     const nitroBoost = nitroActive ? 24 : 0;
-    const baseFreq = 44 + rpm * 88 + nitroBoost;
+    const baseFreq = isSlowMo ? 28 : (44 + rpm * 88 + nitroBoost);
 
-    // Crankshaft fundamental
-    this.engineOsc1.frequency.setTargetAtTime(baseFreq, now, 0.05);
-    // Cylinder firing secondary harmonic (V8/Boxer growl)
-    this.engineOsc2.frequency.setTargetAtTime(baseFreq * 2.0, now, 0.05);
-    // Sub-bass exhaust thud
-    this.engineOsc3.frequency.setTargetAtTime(baseFreq * 0.5, now, 0.05);
-    // High-RPM cam singing fifth
-    this.engineOsc4.frequency.setTargetAtTime(baseFreq * 1.5, now, 0.05);
+    if (this.engineOsc1) this.engineOsc1.frequency.setTargetAtTime(baseFreq, now, 0.05);
+    if (this.engineOsc2) this.engineOsc2.frequency.setTargetAtTime(baseFreq * 2.0, now, 0.05);
+    if (this.engineOsc3) this.engineOsc3.frequency.setTargetAtTime(baseFreq * 0.5, now, 0.05);
+    if (this.engineOsc4) this.engineOsc4.frequency.setTargetAtTime(baseFreq * 1.5, now, 0.05);
 
-    // Smooth lowpass filter tracking revs (warm 320 Hz to 880 Hz, never piercing)
-    const targetCutoff = 320 + rpm * 560 + (nitroActive ? 220 : 0);
-    this.engineFilter.frequency.setTargetAtTime(targetCutoff, now, 0.06);
+    if (this.engineFilter) {
+      const targetCutoff = isSlowMo ? 350 : (320 + rpm * 560 + (nitroActive ? 220 : 0));
+      this.engineFilter.frequency.setTargetAtTime(targetCutoff, now, 0.06);
+    }
 
-    // Clean, punchy engine volume (0.09 at idle, up to 0.20 at redline)
-    const baseEngineVol = 0.09 + (rpm * 0.10) + (nitroActive ? 0.03 : 0);
-    this.engineGain.gain.setTargetAtTime(baseEngineVol, now, 0.05);
+    if (this.engineGain) {
+      const synthVol = 0.07 + (rpm * 0.07) + (nitroActive ? 0.02 : 0);
+      this.engineGain.gain.setTargetAtTime(synthVol, now, 0.05);
+    }
 
     // Realistic tire drift friction (muffled rubber scrub)
     const drift = Math.min(1, Math.max(0, driftIntensity));
-    this.driftGain.gain.setTargetAtTime(drift * 0.12, now, 0.04);
-    this.driftFilter.frequency.setTargetAtTime(950 + drift * 350, now, 0.05);
+    if (this.driftGain) this.driftGain.gain.setTargetAtTime(drift * 0.12, now, 0.04);
+    if (this.driftFilter) this.driftFilter.frequency.setTargetAtTime(950 + drift * 350, now, 0.05);
 
     // Nitro thruster rush
-    this.nitroGain.gain.setTargetAtTime(nitroActive ? 0.15 : 0, now, 0.05);
-    this.nitroSubGain.gain.setTargetAtTime(nitroActive ? 0.09 : 0, now, 0.05);
+    if (this.nitroGain) this.nitroGain.gain.setTargetAtTime(nitroActive ? 0.15 : 0, now, 0.05);
+    if (this.nitroSubGain) this.nitroSubGain.gain.setTargetAtTime(nitroActive ? 0.09 : 0, now, 0.05);
 
     this.prevSpeed = speedKmh;
   }
-
   // AUTHENTIC SPORTS CAR EXHAUST POP / CRACKLE (Rate-limited, never over-noise)
   _aggressiveExhaustBackfire(isDownshift = false) {
     if (!this.settings.sound || !this.context) return;
@@ -538,6 +612,62 @@ export class RaceAudio {
       osc.start(now + i * 0.04);
       osc.stop(now + i * 0.04 + 0.18);
     });
+  }
+
+  // CINEMATIC SLOW-MOTION DASH TAKEDOWN SOUND EFFECT
+  dashTakedown() {
+    if (!this.settings.sound || !this.context) return;
+    const now = this.context.currentTime;
+
+    // 1. Heavy Cinematic Sub-Drop Boom (180 Hz exponential plunge down to 22 Hz)
+    const boom = this.context.createOscillator();
+    const boomGain = this.context.createGain();
+    boom.type = 'sine';
+    boom.frequency.setValueAtTime(180, now);
+    boom.frequency.exponentialRampToValueAtTime(22, now + 0.85);
+
+    boomGain.gain.setValueAtTime(0.45, now);
+    boomGain.gain.exponentialRampToValueAtTime(0.001, now + 1.2);
+
+    boom.connect(boomGain).connect(this.masterGain);
+    boom.start(now);
+    boom.stop(now + 1.25);
+
+    // 2. Slow-Motion Metallic Impact Smash & Shatter
+    const bufferSize = Math.floor(this.context.sampleRate * 0.35);
+    const noiseBuf = this.context.createBuffer(1, bufferSize, this.context.sampleRate);
+    const data = noiseBuf.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+    const smash = this.context.createBufferSource();
+    smash.buffer = noiseBuf;
+
+    const filter = this.context.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.frequency.setValueAtTime(650, now);
+    filter.frequency.exponentialRampToValueAtTime(180, now + 0.35);
+    filter.Q.value = 2.0;
+
+    const smashGain = this.context.createGain();
+    smashGain.gain.setValueAtTime(0.32, now);
+    smashGain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+
+    smash.connect(filter).connect(smashGain).connect(this.masterGain);
+    smash.start(now);
+
+    // 3. Cinematic Slow-Mo Time-Warp Whoosh
+    const whoosh = this.context.createOscillator();
+    const whooshGain = this.context.createGain();
+    whoosh.type = 'triangle';
+    whoosh.frequency.setValueAtTime(90, now);
+    whoosh.frequency.exponentialRampToValueAtTime(320, now + 0.25);
+    whoosh.frequency.exponentialRampToValueAtTime(45, now + 1.1);
+
+    whooshGain.gain.setValueAtTime(0.20, now);
+    whooshGain.gain.exponentialRampToValueAtTime(0.001, now + 1.15);
+
+    whoosh.connect(whooshGain).connect(this.masterGain);
+    whoosh.start(now);
+    whoosh.stop(now + 1.2);
   }
 
   lapComplete() {

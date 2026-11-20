@@ -213,6 +213,15 @@ export class RacingGame {
     this.isDrifting = false;
     this.driftDuration = 0;
 
+    // Dash Slow-Motion Takedown & Elevated Camera
+    this.dashSlowMoActive = false;
+    this.dashSlowMoTimer = 0;
+    this.dashSlowMoDuration = 1.35;
+    this.dashTargetCar = null;
+    this.dashImpactDir = 1;
+    this.dashCooldown = 0;
+    this.timeScale = 1.0;
+
     // Side barrier collision & 3-blink recovery state
     this.wallRecovery = false;
     this.wallBlinkTimer = 0;
@@ -2664,9 +2673,27 @@ export class RacingGame {
       return;
     }
 
-    this.elapsed += dt;
-    this.particles.update(dt);
+    if (this.dashCooldown > 0) this.dashCooldown -= dt;
     if (this.collisionCooldown > 0) this.collisionCooldown -= dt;
+
+    // Slow-Motion Dash Takedown Time Dilation
+    if (this.dashSlowMoActive) {
+      this.dashSlowMoTimer -= dt;
+      if (this.dashSlowMoTimer <= 0) {
+        this.dashSlowMoActive = false;
+        this.timeScale = 1.0;
+        this.callbacks.onDashEnd?.();
+      } else {
+        this.timeScale = 0.22;
+      }
+    } else {
+      this.timeScale = 1.0;
+    }
+
+    const simDt = dt * this.timeScale;
+
+    this.elapsed += simDt;
+    this.particles.update(simDt);
 
     const player = this.vehicles[0];
 
@@ -2691,29 +2718,29 @@ export class RacingGame {
 
     // Boost Pad Surge
     if (player.boostPadTimer > 0) {
-      player.boostPadTimer -= dt;
-      player.speed = THREE.MathUtils.lerp(player.speed, baseTopSpeed * 1.48, 4.5 * dt);
+      player.boostPadTimer -= simDt;
+      player.speed = THREE.MathUtils.lerp(player.speed, baseTopSpeed * 1.48, 4.5 * simDt);
     }
 
     // Acceleration & Braking
     if (accelerate) {
       const recoveryBoost = this.wallRecovery ? 1.45 : 1.0;
-      player.speed += accelRate * recoveryBoost * dt;
+      player.speed += accelRate * recoveryBoost * simDt;
     } else {
-      player.speed -= 6.5 * dt; // natural roll deceleration
+      player.speed -= 6.5 * simDt; // natural roll deceleration
     }
 
     if (brake) {
-      player.speed -= 35.0 * dt;
+      player.speed -= 35.0 * simDt;
     }
 
     // Nitro boost
     if (nitroPressed) {
-      player.speed += 32 * dt;
-      player.nitro = Math.max(0, player.nitro - 0.32 * dt);
+      player.speed += 32 * simDt;
+      player.nitro = Math.max(0, player.nitro - 0.32 * simDt);
       player.nitroActive = true;
     } else {
-      player.nitro = Math.min(1.0, player.nitro + 0.045 * dt);
+      player.nitro = Math.min(1.0, player.nitro + 0.045 * simDt);
       player.nitroActive = false;
     }
 
@@ -2725,20 +2752,20 @@ export class RacingGame {
     if (Math.abs(this.analogSteer) > 0.03) {
       rawSteering = clamp(rawSteering + this.analogSteer, -1.0, 1.0);
     }
-    player.visualSteer = lerp(player.visualSteer || 0, rawSteering, 10.0 * dt);
+    player.visualSteer = lerp(player.visualSteer || 0, rawSteering, 10.0 * simDt);
     const wantsDrift = (handbrake || (brake && Math.abs(rawSteering) > 0.5)) && player.speed > 25;
 
     if (wantsDrift) {
       this.isDrifting = true;
-      this.driftDuration += dt;
-      this.driftDistance = (this.driftDistance || 0) + (player.speed * dt * 1.35);
-      player.slipAngle = lerp(player.slipAngle, rawSteering * 0.38, 6.0 * dt);
-      const pointsGain = Math.round(Math.abs(player.slipAngle) * player.speed * dt * 80);
+      this.driftDuration += simDt;
+      this.driftDistance = (this.driftDistance || 0) + (player.speed * simDt * 1.35);
+      player.slipAngle = lerp(player.slipAngle, rawSteering * 0.38, 6.0 * simDt);
+      const pointsGain = Math.round(Math.abs(player.slipAngle) * player.speed * simDt * 80);
       this.driftScore += pointsGain;
       this.driftCombo = Math.min(4, Math.floor(this.driftDuration / 1.0) + 1);
 
       // Drift recharges nitro
-      player.nitro = Math.min(1.0, player.nitro + 0.12 * dt);
+      player.nitro = Math.min(1.0, player.nitro + 0.12 * simDt);
 
       // Dual Rear Tire Smoke & Friction Sparks
       const carPos = player.object.position;
@@ -2761,16 +2788,14 @@ export class RacingGame {
       this.driftDuration = 0;
       this.driftDistance = 0;
       this.driftCombo = 1;
-      player.slipAngle = lerp(player.slipAngle, 0, 8.0 * dt);
+      player.slipAngle = lerp(player.slipAngle, 0, 8.0 * simDt);
     }
 
     // 100% USER-CONTROLLED MANUAL STEERING
-    // Pure user control: Left steers left, Right steers right.
-    // When no key is pressed, the car drives straight in its lane with zero auto-pull!
     const steerSpeedFactor = clamp(player.speed / 16.0, 0.0, 1.0);
     const userTurnIntent = rawSteering * turnStrength * steerSpeedFactor;
 
-    player.lane += userTurnIntent * dt;
+    player.lane += userTurnIntent * simDt;
 
     const maxRoadLane = ROAD_HALF_WIDTH - 2.2;
 
@@ -2808,13 +2833,12 @@ export class RacingGame {
     // Clamp lane boundary
     player.lane = clamp(player.lane, -maxRoadLane, maxRoadLane);
 
-    // Update 3-blink recovery sequence (3 full cycles: OFF/ON, OFF/ON, OFF/ON)
+    // Update 3-blink recovery sequence
     if (this.wallRecovery) {
       this.wallBlinkTimer -= dt;
       const progress = 1.0 - Math.max(0, this.wallBlinkTimer / (this.wallBlinkTotal || 1.08));
-      const phase = Math.floor(progress * 6); // 6 half-cycles for 3 complete blinks
+      const phase = Math.floor(progress * 6);
 
-      // Even phase (0, 2, 4) = OFF, Odd phase (1, 3, 5) = ON
       player.object.visible = (phase % 2 === 1);
 
       if (this.wallBlinkTimer <= 0) {
@@ -2826,22 +2850,22 @@ export class RacingGame {
       player.object.visible = true;
     }
 
-    // Progress continues from that place onwards as speed increases
-    player.progress += player.speed * dt;
+    // Progress continues from that place onwards
+    player.progress += player.speed * simDt;
 
-    // AI Racers simulation
-    this._simulateAI(dt);
+    // AI Racers simulation (in slow motion during dash)
+    this._simulateAI(simDt);
 
     // Interactive Items check
-    this._checkTrackItems(player, dt);
+    this._checkTrackItems(player, simDt);
 
     // Collisions
     this.resolveCollisions();
 
     // 3D placement, suspension roll & pitch
-    this.updateCarPositions(dt);
+    this.updateCarPositions(simDt);
 
-    // Camera follow & shake
+    // Camera follow & shake (smooth 60fps tracking using real unscaled dt)
     this._updateCamera(dt, player);
 
     // Lap & State callbacks
@@ -2867,6 +2891,7 @@ export class RacingGame {
       driftDistance: Math.round(this.driftDistance || 0),
       driftCombo: this.driftCombo,
       cameraMode: this.cameraMode,
+      isSlowMo: this.dashSlowMoActive,
       minimapPlayer: this.trackSpline.toMinimapCoord(player.object.position),
       minimapAI: this.vehicles.slice(1).map((ai) => ({
         coord: this.trackSpline.toMinimapCoord(ai.object.position),
@@ -2912,16 +2937,60 @@ export class RacingGame {
       const laneGap = Math.abs(ai.lane - player.lane);
       if (Math.abs(sep) < 4.8 && laneGap < 3.4) {
         const dir = player.lane <= ai.lane ? -1 : 1;
-        player.lane = clamp(player.lane + dir * 2.4, -(ROAD_HALF_WIDTH - 2.2), (ROAD_HALF_WIDTH - 2.2));
-        ai.lane = clamp(ai.lane - dir * 1.8, -(ROAD_HALF_WIDTH - 2.2), (ROAD_HALF_WIDTH - 2.2));
-        player.speed = Math.max(12, player.speed * 0.76);
-        this.cameraShake = 0.35;
-        this.particles.spawnSparks(player.object.position, 8, 0xffbb40);
-        if (!this.collisionCooldown || this.collisionCooldown <= 0) {
-          this.collisionCooldown = 0.55;
-          this.callbacks.onCollision?.('car');
+
+        // CINEMATIC DASH TAKEDOWN TRIGGER:
+        // When player rams/sideswipes an AI racer at speed
+        if ((!this.dashCooldown || this.dashCooldown <= 0) && player.speed > 16) {
+          this.triggerDashTakedown(player, ai, dir);
+        } else {
+          player.lane = clamp(player.lane + dir * 2.4, -(ROAD_HALF_WIDTH - 2.2), (ROAD_HALF_WIDTH - 2.2));
+          ai.lane = clamp(ai.lane - dir * 1.8, -(ROAD_HALF_WIDTH - 2.2), (ROAD_HALF_WIDTH - 2.2));
+          player.speed = Math.max(12, player.speed * 0.76);
+          this.cameraShake = 0.35;
+          this.particles.spawnSparks(player.object.position, 8, 0xffbb40);
+          if (!this.collisionCooldown || this.collisionCooldown <= 0) {
+            this.collisionCooldown = 0.55;
+            this.callbacks.onCollision?.('car');
+          }
         }
       }
+    });
+  }
+
+  // CINEMATIC SLOW-MOTION DASH TAKEDOWN SCENE
+  triggerDashTakedown(player, ai, dir) {
+    this.dashSlowMoActive = true;
+    this.dashSlowMoDuration = 1.35;
+    this.dashSlowMoTimer = 1.35;
+    this.dashTargetCar = ai;
+    this.dashImpactDir = dir;
+    this.dashCooldown = 2.8;
+    this.timeScale = 0.22;
+    this.cameraShake = 0.65;
+
+    // Player reward & adrenaline surge boost
+    player.nitro = 1.0;
+    player.nitroActive = true;
+    player.speed = Math.max(player.speed, 65);
+    player.lane = clamp(player.lane + dir * 1.6, -(ROAD_HALF_WIDTH - 2.2), (ROAD_HALF_WIDTH - 2.2));
+
+    // Opponent knocked outward, tilts onto 2 wheels and spins out 360°
+    ai.spinVelocity = -dir * 11.0;
+    ai.tiltAngle = dir * 0.45;
+    ai.speed = Math.max(8, ai.speed * 0.35);
+    ai.lane = clamp(ai.lane - dir * 4.2, -(ROAD_HALF_WIDTH - 2.0), (ROAD_HALF_WIDTH - 2.0));
+
+    // Massive spark shower & debris at contact point
+    const contactPos = player.object.position.clone().add(ai.object.position).multiplyScalar(0.5);
+    contactPos.y = 0.5;
+    this.particles.spawnSparks(contactPos, 28, 0xffdf40);
+    this.particles.spawnSparks(contactPos, 16, 0xff3838);
+    this.particles.spawnSmoke(contactPos, new THREE.Vector3(dir * 2.5, 0.8, -player.speed * 0.1));
+
+    // Trigger HUD and slow-motion takedown sound
+    this.callbacks.onDashTakedown?.({
+      target: ai.name || 'RIVAL',
+      coins: 250,
     });
   }
 
@@ -2933,13 +3002,29 @@ export class RacingGame {
     this.vehicles.forEach((v) => {
       const { center, tangent, normal } = this.trackSpline.sampleAtProgress(v.progress);
       const pos = center.clone().addScaledVector(normal, v.lane);
-      // Perfectly flat plain road placement
-      v.object.position.set(pos.x, 0, pos.z);
 
       const yaw = Math.atan2(tangent.x, tangent.z) + Math.PI;
       const userSteerAngle = v.isPlayer ? ((v.visualSteer || 0) * 0.24 - (v.slipAngle || 0) * 0.45) : 0;
       const steerRoll = v.isPlayer ? ((v.visualSteer || 0) * 0.04 + (v.slipAngle || 0) * 0.20) : 0;
-      v.object.rotation.set(0, yaw + userSteerAngle, steerRoll);
+
+      // Spinout & two-wheel tilt physics for takedowns
+      if (v.spinVelocity) {
+        v.spinAngle = (v.spinAngle || 0) + v.spinVelocity * dt;
+        v.spinVelocity = lerp(v.spinVelocity, 0, 1.8 * dt);
+        if (Math.abs(v.spinVelocity) < 0.05) v.spinVelocity = 0;
+      }
+      if (v.tiltAngle) {
+        v.tiltAngle = lerp(v.tiltAngle, 0, 2.2 * dt);
+        if (Math.abs(v.tiltAngle) < 0.01) v.tiltAngle = 0;
+      }
+
+      const roll = v.isPlayer ? steerRoll : (v.tiltAngle || 0);
+      const totalYaw = yaw + userSteerAngle + (v.spinAngle || 0);
+
+      // Lift slightly if tilted onto two wheels
+      const liftY = Math.abs(v.tiltAngle || 0) * 0.55;
+      v.object.position.set(pos.x, liftY, pos.z);
+      v.object.rotation.set(0, totalYaw, roll);
 
       // High-precision articulated wheel kinematics (Zero wobble, pure steer + roll)
       if (v.object.userData.wheels) {
@@ -2995,8 +3080,50 @@ export class RacingGame {
   }
 
   _updateCamera(dt, player) {
-    const { tangent } = this.trackSpline.sampleAtProgress(player.progress);
+    const { tangent, normal } = this.trackSpline.sampleAtProgress(player.progress);
     const carPos = player.object.position;
+
+    // CINEMATIC ELEVATED DASH TAKEDOWN CAMERA ("slow motion like an elevation")
+    if (this.dashSlowMoActive) {
+      const p = Math.max(0, Math.min(1, 1.0 - (this.dashSlowMoTimer / this.dashSlowMoDuration)));
+      // Smooth bell curve elevation peak (rises up high, holds, and returns gracefully)
+      const elevationPeak = Math.sin(p * Math.PI);
+
+      // Elevated spectator crane shot: rises from 4.8m up to 8.8m in the air!
+      const camY = lerp(4.8, 8.8, elevationPeak);
+      // Lateral swing out sideways to frame both cars dynamically
+      const lateralSwing = this.dashImpactDir * lerp(0, 5.2, elevationPeak);
+      // Camera distance slightly pulls back and angles down
+      const camBack = lerp(13.5, 11.5, elevationPeak);
+
+      const targetCamPos = carPos.clone()
+        .addScaledVector(tangent, -camBack)
+        .addScaledVector(normal, lateralSwing);
+      targetCamPos.y = camY;
+
+      // Smooth cinematic camera tracking (unscaled dt for 60fps butter smoothness)
+      this.camera.position.lerp(targetCamPos, 1 - Math.exp(-dt * 6.5));
+
+      // Dynamic screen shake on initial hit
+      if (this.cameraShake > 0) {
+        this.camera.position.x += (Math.random() - 0.5) * this.cameraShake;
+        this.camera.position.y += (Math.random() - 0.5) * this.cameraShake;
+        this.cameraShake = Math.max(0, this.cameraShake - 1.8 * dt);
+      }
+
+      // Look down at the dramatic collision focal point between player and dashed rival
+      let focusPoint = carPos.clone();
+      if (this.dashTargetCar && this.dashTargetCar.object) {
+        focusPoint.lerp(this.dashTargetCar.object.position, 0.45);
+      }
+      focusPoint.y = 1.0;
+      this.camera.lookAt(focusPoint);
+
+      // Cinematic FOV zoom (compresses the slow-mo action)
+      this.camera.fov = lerp(54, 46, elevationPeak);
+      this.camera.updateProjectionMatrix();
+      return;
+    }
 
     // FOV expands dynamically when boosting
     const targetFov = player.nitroActive ? 68 : 54;

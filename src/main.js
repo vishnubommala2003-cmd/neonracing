@@ -215,7 +215,7 @@ const game = new RacingGame(sceneRoot, {
     }
 
     // Audio update
-    audio.update(state.speed, state.nitroActive, state.isDrifting ? 1.0 : 0.0, state.speed / 280);
+    audio.update(state.speed, state.nitroActive, state.isDrifting ? 1.0 : 0.0, state.speed / 280, state.isSlowMo);
 
     // Mini-map radar
     if (minimapCtx && state.trackMinimapPoints) {
@@ -239,6 +239,36 @@ const game = new RacingGame(sceneRoot, {
     audio.pickup();
     showToast('🔋 N₂O NITRO TANK REFILLED!');
     triggerHaptic(20);
+  },
+
+  onDashTakedown(data) {
+    audio.dashTakedown();
+    triggerHaptic([80, 50, 100, 60, 120]);
+    const bonus = data.coins || 250;
+    saved.coins += bonus;
+    persist();
+    updateWalletUI();
+
+    const overlay = $('#dash-takedown-overlay');
+    if (overlay) {
+      overlay.classList.add('active');
+      const title = overlay.querySelector('.takedown-title');
+      if (title) title.textContent = '💥 DASH TAKEDOWN!';
+      const sub = overlay.querySelector('.takedown-sub');
+      if (sub) sub.textContent = `+${bonus} 🪙 REWARD • FULL NITRO REFILL!`;
+    }
+    const bars = $('#cinematic-bars');
+    if (bars) bars.classList.add('active');
+
+    const msg = $('#race-message');
+    if (msg) msg.textContent = `💥 RIVAL TAKEDOWN! +${bonus} COINS • NITRO REFILLED!`;
+  },
+
+  onDashEnd() {
+    const overlay = $('#dash-takedown-overlay');
+    if (overlay) overlay.classList.remove('active');
+    const bars = $('#cinematic-bars');
+    if (bars) bars.classList.remove('active');
   },
 
   onCollision(type) {
