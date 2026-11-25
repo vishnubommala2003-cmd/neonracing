@@ -20,7 +20,7 @@ const defaults = {
     triumph: { speed: 0, nitro: 0, handling: 0, accel: 0 },
   },
   customs: {
-    triumph: { color: 0x0099ff },
+    triumph: { color: 0xf2540f },
   },
   bestTimes: {
     london: '00:51:72',
@@ -38,7 +38,12 @@ try {
   if (!saved.levelStars) saved.levelStars = { 1: 3 };
   if (!saved.upgrades) saved.upgrades = { triumph: { speed: 0, nitro: 0, handling: 0, accel: 0 } };
   if (!saved.customs || !saved.customs.triumph || !saved.customs.triumph.color) {
-    saved.customs = { triumph: { color: 0x0099ff } };
+    saved.customs = { triumph: { color: 0xf2540f } };
+  }
+  // One-time migration: old blue default paint -> new papaya orange race hypercar
+  if (!saved.paintV2) {
+    if (saved.customs.triumph.color === 0x0099ff) saved.customs.triumph = { color: 0xf2540f };
+    saved.paintV2 = true;
   }
   if (!saved.bestTimes) saved.bestTimes = { london: '00:51:72' };
 } catch (e) {
@@ -215,7 +220,7 @@ const game = new RacingGame(sceneRoot, {
     }
 
     // Audio update
-    audio.update(state.speed, state.nitroActive, state.isDrifting ? 1.0 : 0.0, state.speed / 280, state.isSlowMo);
+    audio.update(state.speed, state.nitroActive, state.isDrifting ? 1.0 : 0.0, state.speed / 400, state.isSlowMo);
 
     // Mini-map radar
     if (minimapCtx && state.trackMinimapPoints) {
@@ -440,7 +445,7 @@ function updateWalletUI() {
 function updateCarStatsUI() {
   const up = saved.upgrades.triumph || { speed: 0, nitro: 0, handling: 0, accel: 0 };
 
-  const topSpeed = 188 + (up.speed || 0) * 8;
+  const topSpeed = Math.round((70 + (94 + (up.speed || 0) * 4) * 0.36) * 3.2);
   const nitroSec = 7 + (up.nitro || 0) * 2;
   const accelVal = 15 + (up.accel || 0) * 5;
   const handlingVal = 30 + (up.handling || 0) * 6;
@@ -451,7 +456,7 @@ function updateCarStatsUI() {
   if ($('#footer-car-rating')) $('#footer-car-rating').textContent = rating;
 
   if ($('#garage-speed-text')) $('#garage-speed-text').textContent = `${topSpeed} km/h`;
-  if ($('#garage-speed-bar')) $('#garage-speed-bar').style.width = `${Math.min(100, Math.round((topSpeed / 240) * 100))}%`;
+  if ($('#garage-speed-bar')) $('#garage-speed-bar').style.width = `${Math.min(100, Math.round((topSpeed / 400) * 100))}%`;
 
   if ($('#garage-nitro-text')) $('#garage-nitro-text').textContent = `${nitroSec} s`;
   if ($('#garage-nitro-bar')) $('#garage-nitro-bar').style.width = `${Math.min(100, Math.round((nitroSec / 15) * 100))}%`;
@@ -464,7 +469,7 @@ function updateCarStatsUI() {
 
   // Select stats
   if ($('#sel-stat-speed')) $('#sel-stat-speed').textContent = `${topSpeed} km/h`;
-  if ($('#sel-meter-speed')) $('#sel-meter-speed').style.width = `${Math.min(100, Math.round((topSpeed / 240) * 100))}%`;
+  if ($('#sel-meter-speed')) $('#sel-meter-speed').style.width = `${Math.min(100, Math.round((topSpeed / 400) * 100))}%`;
 
   if ($('#sel-stat-nitro')) $('#sel-stat-nitro').textContent = `${nitroSec} seconds`;
   if ($('#sel-meter-nitro')) $('#sel-meter-nitro').style.width = `${Math.min(100, Math.round((nitroSec / 15) * 100))}%`;
@@ -728,7 +733,7 @@ function launchRace() {
   const curLvl = LEVELS.find((l) => l.trackKey === selectedTrackKey) || LEVELS.find((l) => l.level === saved.currentLevel) || LEVELS[0];
   selectedTrackKey = curLvl.trackKey || 'london';
 
-  const customOpts = (saved.customs && saved.customs.triumph) || { color: 0x0099ff };
+  const customOpts = (saved.customs && saved.customs.triumph) || { color: 0xf2540f };
   const upgrades = (saved.upgrades && saved.upgrades.triumph) || {};
 
   showScreen('race');
@@ -786,12 +791,13 @@ $('#next-level-btn')?.addEventListener('click', (e) => {
 
 // Color Swatches Selection for GT 86
 const colorFilters = {
-  '0x0099ff': 'none',
-  '0xe62e2e': 'hue-rotate(155deg) saturate(1.2)',
-  '0xffb800': 'hue-rotate(185deg) saturate(1.4) brightness(1.05)',
+  '0xf2540f': 'none',
+  '0x0099ff': 'hue-rotate(190deg) saturate(1.1)',
+  '0xe62e2e': 'hue-rotate(-15deg) saturate(1.15)',
+  '0xffb800': 'hue-rotate(25deg) saturate(1.3) brightness(1.05)',
   '0x15191e': 'grayscale(0.9) brightness(0.65) contrast(1.2)',
-  '0x00e6a8': 'hue-rotate(65deg) saturate(1.15)',
-  '0x9d4edd': 'hue-rotate(240deg) saturate(1.25)',
+  '0x00e6a8': 'hue-rotate(145deg) saturate(1.1)',
+  '0x9d4edd': 'hue-rotate(260deg) saturate(1.2)',
 };
 
 function applyCarColorFilter(rawColor) {
@@ -974,7 +980,7 @@ async function init() {
   renderLevels();
 
   // Initialize saved car color filter on GT 86 photo
-  const curColorHex = (saved.customs && saved.customs.triumph && saved.customs.triumph.color) || 0x0099ff;
+  const curColorHex = (saved.customs && saved.customs.triumph && saved.customs.triumph.color) || 0xf2540f;
   const rawKey = '0x' + curColorHex.toString(16).padStart(6, '0');
   applyCarColorFilter(rawKey);
 
